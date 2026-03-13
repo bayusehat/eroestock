@@ -102,6 +102,17 @@ export interface InvoiceItem {
   subtotal: number;
 }
 
+export interface InvoicePayment {
+  id: number;
+  invoice_id: number;
+  amount: number;
+  date: string;
+  payment_method?: string;
+  account_id?: number;
+  account?: Account;
+  reference_no?: string;
+}
+
 export interface Invoice {
   id: number;
   invoice_no: string;
@@ -120,6 +131,7 @@ export interface Invoice {
   balance_due: number;
   notes?: string;
   terms?: string;
+  payments?: InvoicePayment[];
 }
 
 export interface Transaction {
@@ -201,6 +213,15 @@ export interface PayrollRecord {
   paid_date?: string;
   payment_method?: string;
   notes?: string;
+}
+
+export interface TaxRate {
+  id: number;
+  name: string;
+  rate: number;
+  type: string;
+  is_default: boolean;
+  is_active: boolean;
 }
 
 export interface CompanySetting {
