@@ -25,4 +25,17 @@ trait GeneratesNumber
 
         return $prefix . '-' . $datePart . '-' . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
+
+    public static function generateSimpleNumber(string $prefix, string $table, string $column, int $padLength = 3): string
+    {
+        $pattern = $prefix . '-%';
+        $lastNumbers = DB::table($table)
+            ->where($column, 'like', $pattern)
+            ->pluck($column)
+            ->map(fn ($c) => (int) preg_replace('/\D/', '', $c));
+
+        $sequence = ($lastNumbers->isEmpty() ? 0 : $lastNumbers->max()) + 1;
+
+        return $prefix . '-' . str_pad((string) $sequence, $padLength, '0', STR_PAD_LEFT);
+    }
 }
