@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Check, DollarSign, ArrowLeft } from "lucide-react";
+import { Pencil, Check, DollarSign, ArrowLeft, FileDown } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { PayrollRecord } from "@/types";
 import { PageHeader } from "@/components/page-header";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { downloadPdf } from "@/lib/download";
 import { toast } from "sonner";
 
 const PAYROLL_STATUS_COLORS: Record<string, string> = {
@@ -141,6 +142,20 @@ export default function PayrollDetailPage() {
                 Mark as Paid
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await downloadPdf(`/exports/payroll/${id}/pdf`, `payslip-${payroll.payroll_no}.pdf`);
+                  toast.success("Payslip downloaded");
+                } catch {
+                  toast.error("Failed to download payslip");
+                }
+              }}
+            >
+              <FileDown className="mr-2 size-4" />
+              Download Payslip
+            </Button>
           </div>
         }
       />

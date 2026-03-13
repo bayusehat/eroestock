@@ -275,3 +275,95 @@ export interface PaginatedResponse<T> {
   data: T[];
   meta: PaginatedMeta;
 }
+
+export interface ProfitLossReport {
+  total_revenue: number;
+  total_expenses: number;
+  net_profit: number;
+  revenue: { account_code: string; account_name: string; amount: number }[];
+  expenses: { account_code: string; account_name: string; amount: number }[];
+  chart_data?: { month: string; revenue: number; expenses: number }[];
+}
+
+export interface BalanceSheetReport {
+  assets: { account_code: string; account_name: string; balance: number }[];
+  liabilities: { account_code: string; account_name: string; balance: number }[];
+  equity: { account_code: string; account_name: string; balance: number }[];
+  total_assets: number;
+  total_liabilities: number;
+  total_equity: number;
+}
+
+export interface CashFlowReport {
+  opening_balance: number;
+  closing_balance: number;
+  net_cash_flow: number;
+  operating: { inflows: number; outflows: number };
+  investing: { inflows: number; outflows: number };
+  financing: { inflows: number; outflows: number };
+  chart_data?: { date: string; balance: number }[];
+}
+
+export interface TrialBalanceReport {
+  accounts: { account_code: string; account_name: string; debit: number; credit: number }[];
+  total_debits: number;
+  total_credits: number;
+}
+
+export interface GeneralLedgerReport {
+  account: { id: number; code: string; name: string };
+  opening_balance: number;
+  closing_balance: number;
+  entries: {
+    date: string;
+    description: string;
+    reference?: string;
+    debit: number;
+    credit: number;
+    running_balance: number;
+  }[];
+}
+
+export interface AgingReport {
+  rows: { name: string; current: number; days_31_60: number; days_61_90: number; over_90: number; total: number }[];
+  totals: { current: number; days_31_60: number; days_61_90: number; over_90: number; total: number };
+}
+
+export interface IncomeByClientReport {
+  rows: { client_name: string; amount: number; percentage: number }[];
+}
+
+export interface ExpenseByCategoryReport {
+  rows: { category: string; amount: number; percentage: number }[];
+}
+
+export interface WorkOrderSummaryReport {
+  total_count: number;
+  total_value: number;
+  average_value: number;
+  by_status: { status: string; count: number; total_value: number }[];
+}
+
+export interface PayrollSummaryReport {
+  total_gross: number;
+  total_deductions: number;
+  total_tax: number;
+  total_net: number;
+  by_employee: {
+    employee_name: string;
+    base_salary: number;
+    overtime: number;
+    allowances: number;
+    deductions: number;
+    tax: number;
+    net_pay: number;
+  }[];
+  by_department?: { department: string; count: number; total: number }[];
+}
+
+export interface TaxSummaryReport {
+  rows: { tax_type: string; tax_name: string; amount: number }[];
+  total_collected: number;
+  total_withheld: number;
+  net_liability: number;
+}

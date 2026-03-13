@@ -44,6 +44,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { downloadPdf } from "@/lib/download";
 import { toast } from "sonner";
 
 const INVOICE_STATUS_COLORS: Record<string, string> = {
@@ -218,7 +219,17 @@ export default function InvoiceDetailPage() {
                 Record Payment
               </Button>
             )}
-            <Button variant="outline" disabled>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await downloadPdf(`/exports/invoice/${id}/pdf`, `invoice-${invoice.invoice_no}.pdf`);
+                  toast.success("PDF downloaded");
+                } catch {
+                  toast.error("Failed to download PDF");
+                }
+              }}
+            >
               <FileDown className="mr-2 size-4" />
               Download PDF
             </Button>

@@ -1,14 +1,17 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\ClientController;
 use App\Http\Controllers\Api\V1\CompanySettingController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\EmployeeController;
+use App\Http\Controllers\Api\V1\ExportController;
 use App\Http\Controllers\Api\V1\InvoiceController;
 use App\Http\Controllers\Api\V1\JournalEntryController;
 use App\Http\Controllers\Api\V1\PayrollController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\TaxRateController;
 use App\Http\Controllers\Api\V1\TransactionController;
@@ -60,5 +63,28 @@ Route::prefix('v1')->group(function () {
         Route::put('/settings/{key}', [CompanySettingController::class, 'set']);
 
         Route::get('/dashboard', [DashboardController::class, 'index']);
+
+        Route::prefix('reports')->group(function () {
+            Route::get('profit-loss', [ReportController::class, 'profitLoss']);
+            Route::get('balance-sheet', [ReportController::class, 'balanceSheet']);
+            Route::get('cash-flow', [ReportController::class, 'cashFlow']);
+            Route::get('trial-balance', [ReportController::class, 'trialBalance']);
+            Route::get('general-ledger', [ReportController::class, 'generalLedger']);
+            Route::get('receivable-aging', [ReportController::class, 'receivableAging']);
+            Route::get('payable-aging', [ReportController::class, 'payableAging']);
+            Route::get('income-by-client', [ReportController::class, 'incomeByClient']);
+            Route::get('expense-by-category', [ReportController::class, 'expenseByCategory']);
+            Route::get('work-order-summary', [ReportController::class, 'workOrderSummary']);
+            Route::get('payroll-summary', [ReportController::class, 'payrollSummary']);
+            Route::get('tax-summary', [ReportController::class, 'taxSummary']);
+        });
+
+        Route::get('audit-logs', [AuditLogController::class, 'index']);
+        Route::get('audit-logs-export', [AuditLogController::class, 'export']);
+        Route::get('audit-logs/{auditLog}', [AuditLogController::class, 'show']);
+
+        Route::get('exports/invoice/{invoice}/pdf', [ExportController::class, 'invoicePdf']);
+        Route::get('exports/payroll/{payroll}/pdf', [ExportController::class, 'payslipPdf']);
+        Route::get('exports/report/{type}/pdf', [ExportController::class, 'reportPdf']);
     });
 });
