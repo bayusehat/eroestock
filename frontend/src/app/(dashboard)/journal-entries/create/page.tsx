@@ -205,8 +205,18 @@ export default function CreateJournalEntryPage() {
                             setValue(`lines.${i}.account_id`, parseInt(v ?? "0", 10))
                           }
                         >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Select account" />
+                          <SelectTrigger className="h-8 w-full">
+                            <SelectValue placeholder="Select account">
+                              {watch(`lines.${i}.account_id`)
+                                ? (() => {
+                                    const a = accounts.find(
+                                      (acc) =>
+                                        acc.id === watch(`lines.${i}.account_id`)
+                                    );
+                                    return a ? `${a.code} - ${a.name}` : null;
+                                  })()
+                                : null}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {accounts

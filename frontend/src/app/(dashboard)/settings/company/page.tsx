@@ -7,7 +7,6 @@ import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
-import type { CompanySetting } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,10 +32,9 @@ const companySettingsSchema = z.object({
 type CompanySettingsForm = z.infer<typeof companySettingsSchema>;
 
 async function fetchSettings(): Promise<Record<string, string>> {
-  const res = await apiClient.get<{ data: CompanySetting[] }>("/settings/company");
-  const body = res.data as { data: CompanySetting[] };
-  const settings = body.data ?? (body as unknown as CompanySetting[]);
-  return Object.fromEntries(settings.map((s) => [s.key, s.value]));
+  const res = await apiClient.get<{ data: Record<string, string> }>("/settings");
+  const body = res.data as { data?: Record<string, string> };
+  return body.data ?? {};
 }
 
 export default function CompanySettingsPage() {
@@ -48,8 +46,21 @@ export default function CompanySettingsPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: CompanySettingsForm) => {
-      const payload = Object.entries(data).map(([key, value]) => ({ key, value: value ?? "" }));
-      await apiClient.put("/settings/company", payload);
+      const settings: Record<string, string> = {
+        company_name: data.company_name ?? "",
+        company_logo: data.company_logo ?? "",
+        address: data.company_address ?? "",
+        phone: data.company_phone ?? "",
+        email: data.company_email ?? "",
+        tax_id: data.company_tax_id ?? "",
+        currency: data.currency ?? "",
+        fiscal_year_start: data.fiscal_year_start ?? "",
+        invoice_prefix: data.invoice_prefix ?? "",
+        wo_prefix: data.wo_prefix ?? "",
+        default_payment_terms: data.default_payment_terms ?? "",
+        date_format: data.date_format ?? "",
+      };
+      await apiClient.put("/settings", { settings });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["company-settings"] });
@@ -86,10 +97,11 @@ export default function CompanySettingsPage() {
     if (settings) {
       reset({
         company_name: settings.company_name ?? "",
-        company_address: settings.company_address ?? "",
-        company_phone: settings.company_phone ?? "",
-        company_email: settings.company_email ?? "",
-        company_tax_id: settings.company_tax_id ?? "",
+        company_logo: settings.company_logo ?? "",
+        company_address: settings.address ?? "",
+        company_phone: settings.phone ?? "",
+        company_email: settings.email ?? "",
+        company_tax_id: settings.tax_id ?? "",
         currency: settings.currency ?? "IDR",
         fiscal_year_start: settings.fiscal_year_start ?? "1",
         invoice_prefix: settings.invoice_prefix ?? "INV",

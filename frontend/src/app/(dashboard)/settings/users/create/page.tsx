@@ -16,13 +16,19 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
-const createUserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  phone: z.string().optional(),
-  role_ids: z.array(z.number()).optional(),
-});
+const createUserSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Please enter a valid email"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    password_confirmation: z.string().min(1, "Please confirm your password"),
+    phone: z.string().optional(),
+    role_ids: z.array(z.number()).optional(),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: "Passwords do not match",
+    path: ["password_confirmation"],
+  });
 
 type CreateUserForm = z.infer<typeof createUserSchema>;
 
@@ -47,14 +53,16 @@ export default function CreateUserPage() {
     formState: { errors, isSubmitting },
   } = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
-    defaultValues: { name: "", email: "", password: "", phone: "", role_ids: [] },
+    defaultValues: { name: "", email: "", password: "", password_confirmation: "", phone: "", role_ids: [] },
   });
 
   const roleIds = watch("role_ids") ?? [];
 
   async function onSubmit(data: CreateUserForm) {
     try {
-      await apiClient.post("/users", data);
+      const { password_confirmation, role_ids, ...rest } = data;
+      const payload = { ...rest, password_confirmation, roles: role_ids };
+      await apiClient.post("/users", payload);
       toast.success("User created successfully");
       router.push("/settings/users");
     } catch (err: unknown) {
@@ -101,6 +109,18 @@ export default function CreateUserPage() {
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password_confirmation">Confirm Password</Label>
+              <Input
+                id="password_confirmation"
+                type="password"
+                {...register("password_confirmation")}
+                aria-invalid={!!errors.password_confirmation}
+              />
+              {errors.password_confirmation && (
+                <p className="text-sm text-destructive">{errors.password_confirmation.message}</p>
               )}
             </div>
             <div className="space-y-2">

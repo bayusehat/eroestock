@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
+import { t } from "@/lib/translations";
 
 const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -88,27 +89,27 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Welcome back, ${user?.name ?? "User"}`}
-        description="Here's an overview of your finances"
+        title={`${t.dashboard.welcomeBack}, ${user?.name ?? "Pengguna"}`}
+        description={t.dashboard.overview}
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Revenue MTD"
+          title={t.dashboard.revenueMtd}
           value={formatCurrency(data?.revenue_mtd ?? 0)}
           icon={TrendingUp}
         />
         <StatCard
-          title="Expenses MTD"
+          title={t.dashboard.expensesMtd}
           value={formatCurrency(data?.expenses_mtd ?? 0)}
           icon={TrendingDown}
         />
         <StatCard
-          title="Net Profit MTD"
+          title={t.dashboard.netProfitMtd}
           value={formatCurrency(data?.net_profit_mtd ?? 0)}
           icon={TrendingUp}
         />
         <StatCard
-          title="Cash Balance"
+          title={t.dashboard.cashBalance}
           value={formatCurrency(data?.cash_balance ?? 0)}
           icon={Wallet}
         />
@@ -118,7 +119,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Receipt className="size-4" />
-              Outstanding Receivables
+              {t.dashboard.outstandingReceivables}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -131,7 +132,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="size-4" />
-              Outstanding Payables
+              {t.dashboard.outstandingPayables}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -144,7 +145,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Revenue vs Expense (Last 12)</CardTitle>
+            <CardTitle>{t.dashboard.revenueVsExpense}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -152,8 +153,8 @@ export default function DashboardPage() {
                 <BarChart data={barData}>
                   <XAxis dataKey="month" />
                   <YAxis tickFormatter={(v) => `${v / 1000}k`} />
-                  <Bar dataKey="revenue" fill={CHART_COLORS[0]} name="Revenue" />
-                  <Bar dataKey="expense" fill={CHART_COLORS[1]} name="Expense" />
+                  <Bar dataKey="revenue" fill={CHART_COLORS[0]} name={t.reports.profitLoss.revenueLabel} />
+                  <Bar dataKey="expense" fill={CHART_COLORS[1]} name={t.reports.profitLoss.expensesLabel} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -161,7 +162,7 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Work Order Pipeline</CardTitle>
+            <CardTitle>{t.dashboard.workOrderPipeline}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -185,7 +186,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
-                  No work order data
+                  {t.dashboard.noWorkOrderData}
                 </div>
               )}
             </div>
@@ -194,19 +195,19 @@ export default function DashboardPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
             <ArrowLeftRight className="size-4" />
-            Recent Transactions
+            {t.dashboard.recentTransactions}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead>{t.table.date}</TableHead>
+                <TableHead>{t.common.description}</TableHead>
+                <TableHead>{t.common.status}</TableHead>
+                <TableHead className="text-right">{t.common.amount}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,7 +226,7 @@ export default function DashboardPage() {
               {(!data?.recent_transactions || data.recent_transactions.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No recent transactions
+                    {t.dashboard.noRecentTransactions}
                   </TableCell>
                 </TableRow>
               )}

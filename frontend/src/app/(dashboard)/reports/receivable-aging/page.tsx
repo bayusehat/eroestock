@@ -30,6 +30,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
+import { t } from "@/lib/translations";
 
 const CHART_COLORS = [
   "hsl(var(--chart-1))",
@@ -75,29 +76,29 @@ export default function ReceivableAgingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Accounts Receivable Aging"
-        description="Outstanding invoices by client and aging bucket"
+        title={t.reports.receivableAging.title}
+        description={t.reports.receivableAging.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
       <Card>
         <CardHeader>
-          <CardTitle>Aging by Client</CardTitle>
+          <CardTitle>{t.reports.receivableAging.byClient}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Client Name</TableHead>
-                <TableHead className="text-right">Current (0-30)</TableHead>
-                <TableHead className="text-right">31-60 days</TableHead>
-                <TableHead className="text-right">61-90 days</TableHead>
-                <TableHead className="text-right">90+ days</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.current}</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.days31_60}</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.days61_90}</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.over90}</TableHead>
+                <TableHead className="text-right">{t.common.total}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -114,13 +115,13 @@ export default function ReceivableAgingPage() {
               {(!report.rows || report.rows.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No receivables data
+                    {t.reports.receivableAging.noData}
                   </TableCell>
                 </TableRow>
               )}
               {(report.rows?.length ?? 0) > 0 && report.totals && (
                 <TableRow className="font-semibold">
-                  <TableCell>Totals</TableCell>
+                  <TableCell>{t.table.totals}</TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(report.totals.current)}
                   </TableCell>
@@ -145,7 +146,7 @@ export default function ReceivableAgingPage() {
       {chartData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Aging Distribution</CardTitle>
+            <CardTitle>Distribusi Aging</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">

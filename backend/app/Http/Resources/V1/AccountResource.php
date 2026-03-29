@@ -9,7 +9,7 @@ class AccountResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        return [
+        $data = [
             'id' => $this->id,
             'code' => $this->code,
             'name' => $this->name,
@@ -25,5 +25,11 @@ class AccountResource extends JsonResource
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
+
+        if (isset($this->balance)) {
+            $data['balance'] = (float) $this->balance;
+        }
+
+        return $data;
     }
 }

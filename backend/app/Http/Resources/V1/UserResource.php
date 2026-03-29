@@ -19,7 +19,7 @@ class UserResource extends JsonResource
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
             'permissions' => $this->when(
                 $this->relationLoaded('roles'),
-                fn () => $this->getAllPermissions()->pluck('name')
+                fn () => $this->getAllPermissions()->map(fn ($p) => ['id' => $p->id, 'name' => $p->name])->values()->all()
             ),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

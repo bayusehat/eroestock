@@ -25,6 +25,7 @@ import { formatCurrency } from "@/lib/format";
 import { downloadPdf } from "@/lib/download";
 import { toast } from "sonner";
 import { Wallet, ArrowUpDown, PiggyBank } from "lucide-react";
+import { t } from "@/lib/translations";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -59,9 +60,9 @@ export default function CashFlowPage() {
         `/exports/report/cash-flow/pdf?date_from=${range.from}&date_to=${range.to}`,
         `cash-flow-${range.from}-${range.to}.pdf`
       );
-      toast.success("PDF downloaded");
+      toast.success(t.toast.pdfDownloaded);
     } catch {
-      toast.error("Failed to download PDF");
+      toast.error(t.toast.pdfFailed);
     }
   };
 
@@ -101,54 +102,58 @@ export default function CashFlowPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Cash Flow Statement"
-        description="Operating, investing, and financing activities"
+        title={t.reports.cashFlow.title}
+        description={t.reports.cashFlow.description}
         children={
           <div className="flex items-center gap-2">
             <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
               <ArrowLeft className="mr-2 size-4" />
-              Back
+              {t.common.back}
             </Link>
             <Button onClick={handleExportPdf}>
               <FileDown className="mr-2 size-4" />
-              Export PDF
+              {t.reports.profitLoss.exportPdf}
             </Button>
           </div>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
-            placeholder="From date"
-            className="w-[160px]"
+            placeholder={t.placeholders.fromDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
-            placeholder="To date"
-            className="w-[160px]"
+            placeholder={t.placeholders.toDate}
+            className="w-full"
           />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
-          title="Opening Balance"
+          title={t.reports.cashFlow.openingBalance}
           value={formatCurrency(report.opening_balance)}
           icon={Wallet}
         />
         <StatCard
-          title="Net Cash Flow"
+          title={t.reports.cashFlow.netCashFlow}
           value={formatCurrency(report.net_cash_flow)}
           icon={ArrowUpDown}
         />
         <StatCard
-          title="Closing Balance"
+          title={t.reports.cashFlow.closingBalance}
           value={formatCurrency(report.closing_balance)}
           icon={PiggyBank}
         />
@@ -156,45 +161,45 @@ export default function CashFlowPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Operating Activities</CardTitle>
+            <CardTitle>{t.reports.cashFlow.operatingActivities}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Inflows</span>
+              <span className="text-muted-foreground">{t.reports.cashFlow.inflows}</span>
               <span className="text-green-600">{formatCurrency(report.operating?.inflows ?? 0)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Outflows</span>
+              <span className="text-muted-foreground">{t.reports.cashFlow.outflows}</span>
               <span className="text-red-600">{formatCurrency(report.operating?.outflows ?? 0)}</span>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Investing Activities</CardTitle>
+            <CardTitle>{t.reports.cashFlow.investingActivities}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Inflows</span>
+              <span className="text-muted-foreground">{t.reports.cashFlow.inflows}</span>
               <span className="text-green-600">{formatCurrency(report.investing?.inflows ?? 0)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Outflows</span>
+              <span className="text-muted-foreground">{t.reports.cashFlow.outflows}</span>
               <span className="text-red-600">{formatCurrency(report.investing?.outflows ?? 0)}</span>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Financing Activities</CardTitle>
+            <CardTitle>{t.reports.cashFlow.financingActivities}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Inflows</span>
+              <span className="text-muted-foreground">{t.reports.cashFlow.inflows}</span>
               <span className="text-green-600">{formatCurrency(report.financing?.inflows ?? 0)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Outflows</span>
+              <span className="text-muted-foreground">{t.reports.cashFlow.outflows}</span>
               <span className="text-red-600">{formatCurrency(report.financing?.outflows ?? 0)}</span>
             </div>
           </CardContent>
@@ -202,7 +207,7 @@ export default function CashFlowPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Cash Balance Over Time</CardTitle>
+            <CardTitle>{t.reports.cashFlow.cashBalanceOverTime}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64">
@@ -227,7 +232,7 @@ export default function CashFlowPage() {
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
-                No chart data available
+                {t.reports.profitLoss.noChartData}
               </div>
             )}
           </div>

@@ -24,7 +24,8 @@ class WorkOrderController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('wo_number', 'like', "%{$search}%")
-                    ->orWhere('title', 'like', "%{$search}%");
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('client_work_order_id', 'like', "%{$search}%");
             });
         }
 

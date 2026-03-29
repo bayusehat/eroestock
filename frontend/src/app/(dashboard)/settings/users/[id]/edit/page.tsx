@@ -18,13 +18,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
-const editUserSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().optional(),
-  phone: z.string().optional(),
-  role_ids: z.array(z.number()).optional(),
-});
+const editUserSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Please enter a valid email"),
+    password: z.string().optional(),
+    password_confirmation: z.string().optional(),
+    phone: z.string().optional(),
+    role_ids: z.array(z.number()).optional(),
+  })
+  .refine(
+    (data) =>
+      !data.password || data.password === data.password_confirmation,
+    { message: "Passwords do not match", path: ["password_confirmation"] }
+  );
 
 type EditUserForm = z.infer<typeof editUserSchema>;
 
@@ -69,6 +76,7 @@ export default function EditUserPage() {
       name: "",
       email: "",
       password: "",
+      password_confirmation: "",
       phone: "",
       role_ids: [],
     },
@@ -89,8 +97,12 @@ export default function EditUserPage() {
 
   async function onSubmit(data: EditUserForm) {
     try {
-      const payload = { ...data };
-      if (!payload.password) delete payload.password;
+      const { password_confirmation, role_ids, ...rest } = data;
+      const payload: Record<string, unknown> = { ...rest, roles: role_ids };
+      if (rest.password) {
+        payload.password = rest.password;
+        payload.password_confirmation = password_confirmation;
+      }
       await apiClient.put(`/users/${id}`, payload);
       toast.success("User updated successfully");
       router.push("/settings/users");
@@ -144,6 +156,18 @@ export default function EditUserPage() {
             <div className="space-y-2">
               <Label htmlFor="password">Password (leave blank to keep current)</Label>
               <Input id="password" type="password" {...register("password")} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password_confirmation">Confirm Password</Label>
+              <Input
+                id="password_confirmation"
+                type="password"
+                {...register("password_confirmation")}
+                aria-invalid={!!errors.password_confirmation}
+              />
+              {errors.password_confirmation && (
+                <p className="text-sm text-destructive">{errors.password_confirmation.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>

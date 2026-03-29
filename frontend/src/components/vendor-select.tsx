@@ -42,8 +42,10 @@ export function VendorSelect({
       onValueChange={(v) => onChange?.(v && v !== "none" ? parseInt(v, 10) : null)}
       disabled={disabled}
     >
-      <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={placeholder}>
+          {value ? vendors.find((v) => v.id === value)?.name ?? null : null}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="none">{placeholder}</SelectItem>

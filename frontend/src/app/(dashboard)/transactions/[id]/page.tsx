@@ -1,8 +1,9 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { Transaction } from "@/types";
 import { PageHeader } from "@/components/page-header";
@@ -54,10 +55,29 @@ export default function TransactionDetailPage() {
         title={transaction.transaction_no}
         description={transaction.description ?? "Transaction details"}
         children={
-          <Button variant="outline" onClick={() => router.back()}>
-            <ArrowLeft className="mr-2 size-4" />
-            Back
-          </Button>
+          <div className="flex gap-2">
+            {transaction.invoice_id && (
+              <Link
+                href={`/invoices/${transaction.invoice_id}`}
+                className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+              >
+                <ExternalLink className="size-4" />
+                View Invoice
+              </Link>
+            )}
+            {(transaction.account_id || transaction.contra_account_id) && (
+              <Link
+                href={`/reports/general-ledger?account_id=${transaction.account_id ?? transaction.contra_account_id}`}
+                className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+              >
+                View in Ledger
+              </Link>
+            )}
+            <Button variant="outline" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 size-4" />
+              Back
+            </Button>
+          </div>
         }
       />
       <Card>

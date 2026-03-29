@@ -52,14 +52,16 @@ class AccountSeeder extends Seeder
                 $parentId = $data['parent_id'];
             }
 
-            $account = Account::create([
-                'code' => $data['code'],
-                'name' => $data['name'],
-                'type' => $data['type'],
-                'parent_id' => $parentId,
-                'is_header' => $data['is_header'],
-                'is_system' => true,
-            ]);
+            $account = Account::updateOrCreate(
+                ['code' => $data['code']],
+                [
+                    'name' => $data['name'],
+                    'type' => $data['type'],
+                    'parent_id' => $parentId,
+                    'is_header' => $data['is_header'],
+                    'is_system' => true,
+                ]
+            );
             $created[$data['code']] = $account->id;
         }
     }

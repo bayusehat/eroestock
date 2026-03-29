@@ -32,6 +32,7 @@ export interface Account {
   is_header: boolean;
   description?: string;
   opening_balance: number;
+  balance?: number;
   is_active: boolean;
   is_system: boolean;
   children?: Account[];
@@ -69,10 +70,31 @@ export interface WorkOrderItem {
   subtotal: number;
 }
 
+export interface BudgetRequest {
+  id: number;
+  request_no: string;
+  type: string;
+  title: string;
+  description?: string;
+  amount?: number | null;
+  status: string;
+  created_by: number;
+  reviewed_by?: number | null;
+  reviewed_at?: string | null;
+  review_notes?: string | null;
+  account_id?: number | null;
+  account?: { id: number; code: string; name: string };
+  created_by_user?: User;
+  reviewed_by_user?: User;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WorkOrder {
   id: number;
   wo_number: string;
-  client_id: number;
+  client_id?: number | null;
+  client_work_order_id?: string;
   client?: Client;
   title: string;
   description?: string;
@@ -104,7 +126,8 @@ export interface InvoiceItem {
 
 export interface InvoicePayment {
   id: number;
-  invoice_id: number;
+  transaction_no?: string;
+  invoice_id?: number;
   amount: number;
   date: string;
   payment_method?: string;
@@ -338,7 +361,8 @@ export interface ExpenseByCategoryReport {
 }
 
 export interface WorkOrderSummaryReport {
-  total_count: number;
+  total_count?: number;
+  total_work_orders?: number;
   total_value: number;
   average_value: number;
   by_status: { status: string; count: number; total_value: number }[];

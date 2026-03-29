@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 
-## Personal Accounting Web Application
+## Kucatat — Pencatatan Keuangan Bisnis
 
 **Version:** 1.0
 **Date:** March 13, 2026
@@ -12,7 +12,7 @@
 
 ### 1.1 Purpose
 
-A web-based accounting application designed for small-to-medium businesses to manage work orders, track financial transactions, handle employee payroll, and generate financial reports. The system provides a streamlined approach to bookkeeping without the complexity of enterprise accounting software.
+Kucatat adalah aplikasi pencatatan keuangan berbasis web untuk UKM. Kelola work order, catat transaksi, atur payroll, dan buat laporan keuangan — tanpa kerumitan software akuntansi enterprise.
 
 ### 1.2 Tech Stack
 

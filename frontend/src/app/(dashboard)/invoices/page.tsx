@@ -89,7 +89,7 @@ export default function InvoicesPage() {
   });
 
   const sendMutation = useMutation({
-    mutationFn: (id: number) => apiClient.post(`/invoices/${id}/send`),
+    mutationFn: (id: number) => apiClient.patch(`/invoices/${id}/send`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       toast.success("Invoice sent");
@@ -249,10 +249,7 @@ export default function InvoicesPage() {
             )}
             {row.original.status === "draft" && (
               <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault();
-                  sendMutation.mutate(row.original.id);
-                }}
+                onClick={() => sendMutation.mutate(row.original.id)}
               >
                 <Send className="mr-2 size-4" />
                 <span>Send</span>
@@ -327,8 +324,22 @@ export default function InvoicesPage() {
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v ?? "all")}
           >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Status">
+                {statusFilter && statusFilter !== "all"
+                  ? (() => {
+                      const labels: Record<string, string> = {
+                        draft: "Draft",
+                        sent: "Sent",
+                        partially_paid: "Partially Paid",
+                        paid: "Paid",
+                        overdue: "Overdue",
+                        cancelled: "Cancelled",
+                      };
+                      return labels[statusFilter] ?? statusFilter;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All status</SelectItem>
@@ -344,8 +355,12 @@ export default function InvoicesPage() {
             value={clientFilter}
             onValueChange={(v) => setClientFilter(v ?? "all")}
           >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Client" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Client">
+                {clientFilter && clientFilter !== "all"
+                  ? clients.find((c) => String(c.id) === clientFilter)?.name ?? null
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All clients</SelectItem>

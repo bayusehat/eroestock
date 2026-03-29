@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/auth-context";
 const routeLabels: Record<string, string> = {
   dashboard: "Dashboard",
   "work-orders": "Work Orders",
+  requests: "Requests",
   clients: "Clients",
   vendors: "Vendors",
   invoices: "Invoices",

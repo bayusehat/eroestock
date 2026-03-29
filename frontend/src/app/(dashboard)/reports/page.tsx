@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { t } from "@/lib/translations";
 import {
   TrendingUp,
   Scale,
@@ -27,88 +28,88 @@ import { buttonVariants } from "@/components/ui/button";
 
 const REPORT_CARDS = [
   {
-    category: "FINANCIAL",
+    category: t.reports.financial,
     reports: [
       {
         href: "/reports/profit-loss",
-        title: "Profit & Loss",
-        description: "Revenue, expenses, and net profit for a period",
+        title: t.reports.profitLoss.title,
+        description: t.reports.profitLoss.description,
         icon: TrendingUp,
       },
       {
         href: "/reports/balance-sheet",
-        title: "Balance Sheet",
-        description: "Assets, liabilities, and equity at a point in time",
+        title: t.reports.balanceSheet.title,
+        description: t.reports.balanceSheet.description,
         icon: Scale,
       },
       {
         href: "/reports/cash-flow",
-        title: "Cash Flow Statement",
-        description: "Operating, investing, and financing cash flows",
+        title: t.reports.cashFlow.title,
+        description: t.reports.cashFlow.description,
         icon: ArrowLeftRight,
       },
       {
         href: "/reports/trial-balance",
-        title: "Trial Balance",
-        description: "Debit and credit balances by account",
+        title: t.reports.trialBalance.title,
+        description: t.reports.trialBalance.description,
         icon: BookOpen,
       },
       {
         href: "/reports/general-ledger",
-        title: "General Ledger",
-        description: "Transaction history for a specific account",
+        title: t.reports.generalLedger.title,
+        description: t.reports.generalLedger.description,
         icon: FileText,
       },
     ],
   },
   {
-    category: "BUSINESS",
+    category: t.reports.business,
     reports: [
       {
         href: "/reports/receivable-aging",
-        title: "Accounts Receivable Aging",
-        description: "Outstanding invoices by client and aging bucket",
+        title: t.reports.receivableAging.title,
+        description: t.reports.receivableAging.description,
         icon: Users,
       },
       {
         href: "/reports/payable-aging",
-        title: "Accounts Payable Aging",
-        description: "Outstanding payables by vendor and aging bucket",
+        title: t.reports.payableAging.title,
+        description: t.reports.payableAging.description,
         icon: CreditCard,
       },
       {
         href: "/reports/income-by-client",
-        title: "Income by Client",
-        description: "Revenue breakdown by client",
+        title: t.reports.incomeByClient.title,
+        description: t.reports.incomeByClient.description,
         icon: PieChart,
       },
       {
         href: "/reports/expense-by-category",
-        title: "Expense by Category",
-        description: "Expense breakdown by account/category",
+        title: t.reports.expenseByCategory.title,
+        description: t.reports.expenseByCategory.description,
         icon: FolderOpen,
       },
     ],
   },
   {
-    category: "OPERATIONS",
+    category: t.reports.operations,
     reports: [
       {
         href: "/reports/work-order-summary",
-        title: "Work Order Summary",
-        description: "Work orders by status and value",
+        title: t.reports.workOrderSummary.title,
+        description: t.reports.workOrderSummary.description,
         icon: Briefcase,
       },
       {
         href: "/reports/payroll-summary",
-        title: "Payroll Summary",
-        description: "Payroll totals by period and employee",
+        title: t.reports.payrollSummary.title,
+        description: t.reports.payrollSummary.description,
         icon: Receipt,
       },
       {
         href: "/reports/tax-summary",
-        title: "Tax Summary",
-        description: "Tax collected, withheld, and liability",
+        title: t.reports.taxSummary.title,
+        description: t.reports.taxSummary.description,
         icon: Calculator,
       },
     ],
@@ -119,8 +120,8 @@ export default function ReportsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Reports"
-        description="Financial and operational reports"
+        title={t.reports.title}
+        description={t.reports.description}
       />
       <div className="space-y-10">
         {REPORT_CARDS.map((section) => (
@@ -153,7 +154,7 @@ export default function ReportsPage() {
                         href={report.href}
                         className={buttonVariants({ variant: "outline", size: "sm" })}
                       >
-                        View Report
+                        {t.reports.viewReport}
                         <ChevronRight className="ml-1 size-4" />
                       </Link>
                     </CardContent>

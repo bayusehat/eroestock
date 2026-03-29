@@ -30,6 +30,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
+import { t } from "@/lib/translations";
 
 const CHART_COLORS = [
   "hsl(var(--chart-1))",
@@ -75,12 +76,12 @@ export default function PayableAgingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Accounts Payable Aging"
-        description="Outstanding payables by vendor and aging bucket"
+        title={t.reports.payableAging.title}
+        description={t.reports.payableAging.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
@@ -93,11 +94,11 @@ export default function PayableAgingPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Vendor Name</TableHead>
-                <TableHead className="text-right">Current (0-30)</TableHead>
-                <TableHead className="text-right">31-60 days</TableHead>
-                <TableHead className="text-right">61-90 days</TableHead>
-                <TableHead className="text-right">90+ days</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.current}</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.days31_60}</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.days61_90}</TableHead>
+                <TableHead className="text-right">{t.reports.receivableAging.over90}</TableHead>
+                <TableHead className="text-right">{t.common.total}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

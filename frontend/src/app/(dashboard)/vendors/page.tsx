@@ -153,8 +153,14 @@ export default function VendorsPage() {
       <div className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Status">
+                {statusFilter && statusFilter !== "all"
+                  ? statusFilter === "active"
+                    ? "Active"
+                    : "Inactive"
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All status</SelectItem>

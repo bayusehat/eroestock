@@ -28,6 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { Wallet, Minus, Percent, DollarSign } from "lucide-react";
+import { t } from "@/lib/translations";
 
 function getDefaultPeriod() {
   const now = new Date();
@@ -92,7 +93,7 @@ export default function PayrollSummaryPage() {
   };
 
   const periodLabel = period
-    ? new Date(period + "-01").toLocaleDateString("en-US", {
+    ? new Date(period + "-01").toLocaleDateString("id-ID", {
         month: "long",
         year: "numeric",
       })
@@ -101,26 +102,35 @@ export default function PayrollSummaryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Payroll Summary"
-        description="Payroll totals by period and employee"
+        title={t.reports.payrollSummary.title}
+        description={t.reports.payrollSummary.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
-      <div className="flex items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">Period</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[180px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.reports.payrollSummary.period}
+          </label>
           <Select value={period} onValueChange={(v) => setPeriod(v ?? "")}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select month/year" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t.reports.payrollSummary.selectPeriod}>
+                {period
+                  ? new Date(period + "-01").toLocaleDateString("id-ID", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {periodOptions.map((p) => (
                 <SelectItem key={p} value={p}>
-                  {new Date(p + "-01").toLocaleDateString("en-US", {
+                  {new Date(p + "-01").toLocaleDateString("id-ID", {
                     month: "long",
                     year: "numeric",
                   })}
@@ -132,41 +142,41 @@ export default function PayrollSummaryPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Total Gross"
+          title={t.reports.payrollSummary.totalGross}
           value={formatCurrency(report.total_gross)}
           icon={Wallet}
         />
         <StatCard
-          title="Total Deductions"
+          title={t.reports.payrollSummary.totalDeductions}
           value={formatCurrency(report.total_deductions)}
           icon={Minus}
         />
         <StatCard
-          title="Total Tax"
+          title={t.reports.payrollSummary.totalTax}
           value={formatCurrency(report.total_tax)}
           icon={Percent}
         />
         <StatCard
-          title="Total Net"
+          title={t.reports.payrollSummary.totalNet}
           value={formatCurrency(report.total_net)}
           icon={DollarSign}
         />
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>By Employee ({periodLabel})</CardTitle>
+            <CardTitle>{t.reports.payrollSummary.byEmployee} ({periodLabel})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead className="text-right">Base Salary</TableHead>
-                <TableHead className="text-right">Overtime</TableHead>
-                <TableHead className="text-right">Allowances</TableHead>
-                <TableHead className="text-right">Deductions</TableHead>
-                <TableHead className="text-right">Tax</TableHead>
-                <TableHead className="text-right">Net Pay</TableHead>
+                <TableHead>{t.reports.payrollSummary.employee}</TableHead>
+                <TableHead className="text-right">{t.reports.payrollSummary.baseSalary}</TableHead>
+                <TableHead className="text-right">{t.reports.payrollSummary.overtime}</TableHead>
+                <TableHead className="text-right">{t.reports.payrollSummary.allowances}</TableHead>
+                <TableHead className="text-right">{t.reports.payrollSummary.deductions}</TableHead>
+                <TableHead className="text-right">{t.reports.payrollSummary.tax}</TableHead>
+                <TableHead className="text-right">{t.reports.payrollSummary.netPay}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -196,7 +206,7 @@ export default function PayrollSummaryPage() {
               {(!report.by_employee || report.by_employee.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    No payroll data for this period
+                    {t.reports.payrollSummary.noData}
                   </TableCell>
                 </TableRow>
               )}
@@ -207,15 +217,15 @@ export default function PayrollSummaryPage() {
       {(report.by_department?.length ?? 0) > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>By Department</CardTitle>
+            <CardTitle>{t.reports.payrollSummary.byDepartment}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Department</TableHead>
-                  <TableHead className="text-right">Count</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead className="text-right">{t.common.count}</TableHead>
+                <TableHead className="text-right">{t.common.total}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

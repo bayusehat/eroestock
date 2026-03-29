@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { ClipboardList, Loader2, Plus, Trash2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
-import type { Invoice } from "@/types";
+import type { Invoice, WorkOrder } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -22,13 +24,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ClientSelect } from "@/components/client-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { formatCurrency } from "@/lib/format";
@@ -47,6 +51,7 @@ const lineItemSchema = z.object({
 
 const editInvoiceSchema = z.object({
   client_id: z.number().min(1, "Client is required"),
+  work_order_id: z.number().nullable().optional(),
   issue_date: z.string().min(1, "Issue date is required"),
   due_date: z.string().min(1, "Due date is required"),
   notes: z.string().optional(),
@@ -84,6 +89,10 @@ export default function EditInvoicePage() {
     enabled: !!id,
   });
 
+  const [woDialogOpen, setWoDialogOpen] = useState(false);
+  const [woSearch, setWoSearch] = useState("");
+  const [selectedWoId, setSelectedWoId] = useState<number | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -96,6 +105,7 @@ export default function EditInvoicePage() {
     resolver: zodResolver(editInvoiceSchema),
     defaultValues: {
       client_id: 0 as unknown as number,
+      work_order_id: null,
       issue_date: "",
       due_date: "",
       notes: "",
@@ -104,21 +114,89 @@ export default function EditInvoicePage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "items",
   });
 
   const items = watch("items");
+  const linkedWoId = watch("work_order_id");
+
+  const { data: workOrders, isLoading: woLoading } = useQuery({
+    queryKey: ["work-orders-for-invoice", woSearch],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.set("status", "completed");
+      params.set("per_page", "50");
+      if (woSearch) params.set("search", woSearch);
+      const res = await apiClient.get<{ data: WorkOrder[] }>(
+        `/work-orders?${params.toString()}`
+      );
+      const body = res.data as { data: WorkOrder[] };
+      return body.data ?? [];
+    },
+    enabled: woDialogOpen,
+  });
+
+  const { data: linkedWo } = useQuery({
+    queryKey: ["work-order", linkedWoId],
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: WorkOrder }>(
+        `/work-orders/${linkedWoId}`
+      );
+      const body = res.data as { data: WorkOrder };
+      return body.data ?? (body as unknown as WorkOrder);
+    },
+    enabled: !!linkedWoId,
+  });
+
+  async function importWorkOrder(woId: number) {
+    try {
+      const res = await apiClient.get<{ data: WorkOrder }>(
+        `/work-orders/${woId}`
+      );
+      const body = res.data as { data: WorkOrder };
+      const wo = body.data ?? (body as unknown as WorkOrder);
+
+      if (wo.client_id) {
+        setValue("client_id", wo.client_id);
+      }
+      setValue("work_order_id", wo.id);
+
+      if (wo.items && wo.items.length > 0) {
+        replace(
+          wo.items.map((item) => ({
+            description: item.description,
+            quantity: Number(item.quantity),
+            unit: item.unit || "pcs",
+            unit_price: Number(item.unit_price),
+            discount: Number(item.discount ?? 0),
+            tax_rate: Number(item.tax_rate ?? 0),
+          }))
+        );
+      }
+
+      setSelectedWoId(null);
+      setWoDialogOpen(false);
+      toast.success(`Imported items from ${wo.wo_number}`);
+    } catch {
+      toast.error("Failed to load work order details");
+    }
+  }
+
+  function unlinkWorkOrder() {
+    setValue("work_order_id", null);
+  }
 
   useEffect(() => {
     if (invoice) {
-      if (invoice.status !== "draft") {
+      if (invoice.status !== "draft" && invoice.status !== "sent") {
         router.replace(`/invoices/${id}`);
         return;
       }
       reset({
         client_id: invoice.client_id,
+        work_order_id: invoice.work_order_id ?? null,
         issue_date: invoice.issue_date,
         due_date: invoice.due_date,
         notes: invoice.notes ?? "",
@@ -162,6 +240,7 @@ export default function EditInvoicePage() {
     try {
       const payload = {
         client_id: data.client_id,
+        work_order_id: data.work_order_id ?? null,
         issue_date: data.issue_date,
         due_date: data.due_date,
         notes: data.notes || undefined,
@@ -211,8 +290,8 @@ export default function EditInvoicePage() {
         description={invoice.invoice_no}
       />
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Invoice Details</CardTitle>
@@ -260,123 +339,264 @@ export default function EditInvoicePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    {...register("notes")}
-                    rows={3}
-                  />
+                  <Textarea id="notes" {...register("notes")} rows={3} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="terms">Terms</Label>
-                  <Textarea
-                    id="terms"
-                    {...register("terms")}
-                    rows={3}
-                  />
+                  <Textarea id="terms" {...register("terms")} rows={3} />
                 </div>
               </CardContent>
             </Card>
+
+            {linkedWoId && linkedWo && (
+              <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20">
+                <CardContent className="flex items-center justify-between pt-6">
+                  <div className="flex items-center gap-3">
+                    <ClipboardList className="size-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium">
+                        Linked to {linkedWo.wo_number}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {linkedWo.title} &middot;{" "}
+                        {formatCurrency(Number(linkedWo.grand_total))}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={unlinkWorkOrder}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    Unlink
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
+
           <div className="space-y-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle>Line Items</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="w-20">Qty</TableHead>
-                        <TableHead className="w-20">Unit</TableHead>
-                        <TableHead className="w-20">Unit Price</TableHead>
-                        <TableHead className="w-20">Discount</TableHead>
-                        <TableHead className="w-20">Tax %</TableHead>
-                        <TableHead className="w-24 text-right">Subtotal</TableHead>
-                        <TableHead className="w-10" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {fields.map((field, i) => (
-                        <TableRow key={field.id}>
-                          <TableCell>
-                            <Input
-                              {...register(`items.${i}.description`)}
-                              className="h-8"
-                              placeholder="Description"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.quantity`)}
-                              className="h-8"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              {...register(`items.${i}.unit`)}
-                              className="h-8"
-                              placeholder="pcs"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.unit_price`)}
-                              className="h-8"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.discount`)}
-                              className="h-8"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.tax_rate`)}
-                              className="h-8"
-                            />
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {formatCurrency(
-                              calcSubtotal(
-                                items?.[i]?.quantity ?? 0,
-                                items?.[i]?.unit_price ?? 0,
-                                items?.[i]?.discount ?? 0,
-                                items?.[i]?.tax_rate ?? 0
+                <Dialog open={woDialogOpen} onOpenChange={setWoDialogOpen}>
+                  <DialogTrigger
+                    render={
+                      <Button type="button" variant="outline" size="sm">
+                        <ClipboardList className="mr-2 size-4" />
+                        Import from WO
+                      </Button>
+                    }
+                  />
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Select Work Order</DialogTitle>
+                      <DialogDescription>
+                        Choose a completed work order to import its line items
+                        into this invoice.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Input
+                        placeholder="Search by WO number or title..."
+                        value={woSearch}
+                        onChange={(e) => setWoSearch(e.target.value)}
+                      />
+                      <div className="max-h-80 overflow-y-auto space-y-2">
+                        {woLoading && (
+                          <p className="text-center text-sm text-muted-foreground py-8">
+                            Loading work orders...
+                          </p>
+                        )}
+                        {!woLoading && (!workOrders || workOrders.length === 0) && (
+                          <p className="text-center text-sm text-muted-foreground py-8">
+                            No completed work orders found.
+                          </p>
+                        )}
+                        {workOrders?.map((wo) => (
+                          <div
+                            key={wo.id}
+                            className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
+                              selectedWoId === wo.id
+                                ? "border-primary bg-primary/5"
+                                : "hover:bg-muted/50"
+                            }`}
+                            onClick={() =>
+                              setSelectedWoId(
+                                selectedWoId === wo.id ? null : wo.id
                               )
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => remove(i)}
-                              disabled={fields.length === 1}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                            }
+                          >
+                            <Checkbox
+                              checked={selectedWoId === wo.id}
+                              onCheckedChange={() =>
+                                setSelectedWoId(
+                                  selectedWoId === wo.id ? null : wo.id
+                                )
+                              }
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">
+                                  {wo.wo_number}
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  {wo.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {wo.title}
+                              </p>
+                              {wo.client_work_order_id && (
+                                <p className="text-xs text-muted-foreground">
+                                  Client WO: {wo.client_work_order_id}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-sm font-medium">
+                                {formatCurrency(Number(wo.grand_total))}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {wo.items?.length ?? 0} items
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedWoId(null);
+                          setWoDialogOpen(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        disabled={!selectedWoId}
+                        onClick={() => {
+                          if (selectedWoId) importWorkOrder(selectedWoId);
+                        }}
+                      >
+                        Import Items
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {fields.map((field, i) => (
+                  <div
+                    key={field.id}
+                    className="rounded-lg border p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Item {i + 1}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(i)}
+                        disabled={fields.length === 1}
+                        className="h-7 px-2 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3.5 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Description</Label>
+                      <Input
+                        {...register(`items.${i}.description`)}
+                        placeholder="Item description"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Qty</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...register(`items.${i}.quantity`, {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Unit</Label>
+                        <Input
+                          {...register(`items.${i}.unit`)}
+                          placeholder="pcs"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Unit Price</Label>
+                        <Controller
+                          name={`items.${i}.unit_price`}
+                          control={control}
+                          render={({ field }) => (
+                            <CurrencyInput
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Discount</Label>
+                        <Controller
+                          name={`items.${i}.discount`}
+                          control={control}
+                          render={({ field }) => (
+                            <CurrencyInput
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Tax %</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...register(`items.${i}.tax_rate`, {
+                            valueAsNumber: true,
+                          })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Subtotal</Label>
+                        <div className="flex h-9 items-center rounded-md border bg-muted/50 px-3 text-sm font-medium">
+                          {formatCurrency(
+                            calcSubtotal(
+                              items?.[i]?.quantity ?? 0,
+                              items?.[i]?.unit_price ?? 0,
+                              items?.[i]?.discount ?? 0,
+                              items?.[i]?.tax_rate ?? 0
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="mt-4"
+                  className="w-full"
                   onClick={() =>
                     append({
                       description: "",

@@ -2,13 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/auth-context";
 
-const settingsTabs = [
-  { href: "/settings/company", label: "Company" },
-  { href: "/settings/tax-rates", label: "Tax Rates" },
-  { href: "/settings/users", label: "Users" },
-  { href: "/settings/roles", label: "Roles" },
-  { href: "/settings/audit-logs", label: "Audit Logs" },
+const settingsTabs: { href: string; label: string; permission: string }[] = [
+  { href: "/settings/company", label: "Company", permission: "settings-view" },
+  { href: "/settings/tax-rates", label: "Tax Rates", permission: "settings-view" },
+  { href: "/settings/users", label: "Users", permission: "users-view" },
+  { href: "/settings/roles", label: "Roles", permission: "roles-view" },
+  { href: "/settings/audit-logs", label: "Audit Logs", permission: "audit_logs-view" },
 ];
 
 function getActiveTab(pathname: string) {
@@ -23,13 +24,15 @@ export default function SettingsLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { hasPermission } = useAuth();
+  const visibleTabs = settingsTabs.filter((tab) => hasPermission(tab.permission));
   const activeTab = getActiveTab(pathname);
 
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
-          {settingsTabs.map((tab) => (
+          {visibleTabs.map((tab) => (
             <TabsTrigger
               key={tab.href}
               value={tab.href}

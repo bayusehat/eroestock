@@ -22,6 +22,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { Receipt, FileDown, Shield } from "lucide-react";
+import { t } from "@/lib/translations";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -78,55 +79,59 @@ export default function TaxSummaryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Tax Summary"
-        description="Tax collected, withheld, and liability"
+        title={t.reports.taxSummary.title}
+        description={t.reports.taxSummary.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
-            placeholder="From date"
-            className="w-[160px]"
+            placeholder={t.placeholders.fromDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
-            placeholder="To date"
-            className="w-[160px]"
+            placeholder={t.placeholders.toDate}
+            className="w-full"
           />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
-          title="Total Tax Collected (from invoices)"
+          title={t.reports.taxSummary.totalCollected}
           value={formatCurrency(report.total_collected)}
           icon={Receipt}
         />
         <StatCard
-          title="Total Tax Withheld (from payroll)"
+          title={t.reports.taxSummary.totalWithheld}
           value={formatCurrency(report.total_withheld)}
           icon={FileDown}
         />
         <StatCard
-          title="Net Tax Liability"
+          title={t.reports.taxSummary.netLiability}
           value={formatCurrency(report.net_liability)}
           icon={Shield}
         />
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Tax by Type</CardTitle>
+            <CardTitle>{t.reports.taxSummary.byType}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -134,7 +139,7 @@ export default function TaxSummaryPage() {
               <TableRow>
                 <TableHead>Tax Type</TableHead>
                 <TableHead>Tax Name</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">{t.common.amount}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -150,7 +155,7 @@ export default function TaxSummaryPage() {
               {(!report.rows || report.rows.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center text-muted-foreground">
-                    No tax data for this period
+                    {t.reports.taxSummary.noData}
                   </TableCell>
                 </TableRow>
               )}

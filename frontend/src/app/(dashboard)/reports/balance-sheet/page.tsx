@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { downloadPdf } from "@/lib/download";
 import { toast } from "sonner";
+import { t } from "@/lib/translations";
 
 function getDefaultDate() {
   return new Date().toISOString().split("T")[0] ?? "";
@@ -50,9 +51,9 @@ export default function BalanceSheetPage() {
         `/exports/report/balance-sheet/pdf?as_of=${asOf}`,
         `balance-sheet-${asOf}.pdf`
       );
-      toast.success("PDF downloaded");
+      toast.success(t.toast.pdfDownloaded);
     } catch {
-      toast.error("Failed to download PDF");
+      toast.error(t.toast.pdfFailed);
     }
   };
 
@@ -85,29 +86,31 @@ export default function BalanceSheetPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Balance Sheet"
-        description="Assets, liabilities, and equity"
+        title={t.reports.balanceSheet.title}
+        description={t.reports.balanceSheet.description}
         children={
           <div className="flex items-center gap-2">
             <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
               <ArrowLeft className="mr-2 size-4" />
-              Back
+              {t.common.back}
             </Link>
             <Button onClick={handleExportPdf}>
               <FileDown className="mr-2 size-4" />
-              Export PDF
+              {t.reports.profitLoss.exportPdf}
             </Button>
           </div>
         }
       />
-      <div className="flex items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">As of</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.reports.balanceSheet.asOf}
+          </label>
           <DatePicker
             value={asOf}
             onChange={setAsOf}
-            placeholder="As of date"
-            className="w-[160px]"
+            placeholder={t.placeholders.asOfDate}
+            className="w-full"
           />
         </div>
         <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
@@ -115,13 +118,13 @@ export default function BalanceSheetPage() {
             <>
               <Check className="size-4 text-green-600" />
               <span className="text-sm font-medium text-green-600">
-                Balanced: Assets = Liabilities + Equity
+                {t.reports.balanceSheet.balanced}
               </span>
             </>
           ) : (
             <>
               <X className="size-4 text-red-600" />
-              <span className="text-sm font-medium text-red-600">Not balanced</span>
+              <span className="text-sm font-medium text-red-600">{t.reports.balanceSheet.notBalanced}</span>
             </>
           )}
         </div>
@@ -129,14 +132,14 @@ export default function BalanceSheetPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Assets</CardTitle>
+            <CardTitle>{t.reports.balanceSheet.assets}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>{t.reports.generalLedger.account}</TableHead>
+                    <TableHead className="text-right">{t.table.balance}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,28 +156,28 @@ export default function BalanceSheetPage() {
                 {(!report.assets || report.assets.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={2} className="text-center text-muted-foreground">
-                      No data
+                      {t.reports.balanceSheet.noData}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="mt-4 flex justify-between border-t pt-4 font-semibold">
-              <span>Total Assets</span>
+              <span>{t.reports.balanceSheet.totalAssets}</span>
               <span>{formatCurrency(report.total_assets)}</span>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Liabilities</CardTitle>
+            <CardTitle>{t.reports.balanceSheet.liabilities}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>{t.reports.generalLedger.account}</TableHead>
+                    <TableHead className="text-right">{t.table.balance}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -191,28 +194,28 @@ export default function BalanceSheetPage() {
                 {(!report.liabilities || report.liabilities.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={2} className="text-center text-muted-foreground">
-                      No data
+                      {t.reports.balanceSheet.noData}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="mt-4 flex justify-between border-t pt-4 font-semibold">
-              <span>Total Liabilities</span>
+              <span>{t.reports.balanceSheet.totalLiabilities}</span>
               <span>{formatCurrency(report.total_liabilities)}</span>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Equity</CardTitle>
+            <CardTitle>{t.reports.balanceSheet.equity}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
+                    <TableHead>{t.reports.generalLedger.account}</TableHead>
+                    <TableHead className="text-right">{t.table.balance}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -229,14 +232,14 @@ export default function BalanceSheetPage() {
                 {(!report.equity || report.equity.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={2} className="text-center text-muted-foreground">
-                      No data
+                      {t.reports.balanceSheet.noData}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="mt-4 flex justify-between border-t pt-4 font-semibold">
-              <span>Total Equity</span>
+              <span>{t.reports.balanceSheet.totalEquity}</span>
               <span>{formatCurrency(report.total_equity)}</span>
             </div>
           </CardContent>

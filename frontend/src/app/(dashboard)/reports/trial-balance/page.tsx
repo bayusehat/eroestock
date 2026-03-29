@@ -20,6 +20,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
+import { t } from "@/lib/translations";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -69,32 +70,36 @@ export default function TrialBalancePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Trial Balance"
-        description="Debit and credit balances by account"
+        title={t.reports.trialBalance.title}
+        description={t.reports.trialBalance.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
-            placeholder="From date"
-            className="w-[160px]"
+            placeholder={t.placeholders.fromDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
-            placeholder="To date"
-            className="w-[160px]"
+            placeholder={t.placeholders.toDate}
+            className="w-full"
           />
         </div>
         <div
@@ -105,28 +110,28 @@ export default function TrialBalancePage() {
           {balanced ? (
             <>
               <Check className="size-4 text-green-600" />
-              <span className="text-sm font-medium text-green-600">Balanced</span>
+              <span className="text-sm font-medium text-green-600">{t.reports.trialBalance.balanced}</span>
             </>
           ) : (
             <>
               <X className="size-4 text-red-600" />
-              <span className="text-sm font-medium text-red-600">Not balanced</span>
+              <span className="text-sm font-medium text-red-600">{t.reports.balanceSheet.notBalanced}</span>
             </>
           )}
         </div>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Trial Balance</CardTitle>
+          <CardTitle>{t.reports.trialBalance.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Account Code</TableHead>
-                <TableHead>Account Name</TableHead>
-                <TableHead className="text-right">Debit Balance</TableHead>
-                <TableHead className="text-right">Credit Balance</TableHead>
+                <TableHead>{t.table.accountCode}</TableHead>
+                <TableHead>{t.table.accountName}</TableHead>
+                <TableHead className="text-right">{t.table.debitBalance}</TableHead>
+                <TableHead className="text-right">{t.table.creditBalance}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,13 +150,13 @@ export default function TrialBalancePage() {
               {(!report.accounts || report.accounts.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No data for this period
+                    {t.common.noData}
                   </TableCell>
                 </TableRow>
               )}
               {(report.accounts?.length ?? 0) > 0 && (
                 <TableRow className="font-semibold">
-                  <TableCell colSpan={2}>Totals</TableCell>
+                  <TableCell colSpan={2}>{t.table.totals}</TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(report.total_debits)}
                   </TableCell>

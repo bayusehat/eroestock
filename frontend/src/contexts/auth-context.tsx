@@ -62,7 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = useCallback(
     (permission: string) => {
       if (!user) return false;
-      return user.permissions?.some((p) => p.name === permission) ?? false;
+      const perms = user.permissions ?? [];
+      return perms.some((p) => (typeof p === "string" ? p : p?.name) === permission);
     },
     [user]
   );

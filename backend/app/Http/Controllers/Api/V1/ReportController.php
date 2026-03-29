@@ -33,21 +33,54 @@ class ReportController extends Controller
     {
         [$dateFrom, $dateTo] = $this->dateRange($request);
 
-        $revenueByAccount = Transaction::query()
+        // Revenue from Journal Entries (invoice revenue recognition - credit to revenue accounts)
+        $journalRevenue = JournalEntryLine::query()
+            ->join('accounts', 'journal_entry_lines.account_id', '=', 'accounts.id')
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.id')
+            ->where('accounts.type', 'revenue')
+            ->where('journal_entry_lines.credit', '>', 0)
+            ->whereBetween('journal_entries.date', [$dateFrom, $dateTo])
+            ->select('accounts.id', 'accounts.code', 'accounts.name', DB::raw('SUM(journal_entry_lines.credit) as total'))
+            ->groupBy('accounts.id', 'accounts.code', 'accounts.name')
+            ->get()
+            ->map(fn ($r) => [
+                'account_id' => $r->id,
+                'account_code' => $r->code,
+                'account_name' => $r->name,
+                'amount' => (float) $r->total,
+            ])
+            ->values()
+            ->toArray();
+
+        // Revenue from Transactions (direct income - e.g. non-invoice payments to revenue accounts)
+        $txnRevenue = Transaction::query()
             ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
             ->where('transactions.type', 'income')
+            ->where('accounts.type', 'revenue')
             ->whereBetween('transactions.date', [$dateFrom, $dateTo])
             ->select('accounts.id', 'accounts.code', 'accounts.name', DB::raw('SUM(transactions.amount) as total'))
             ->groupBy('accounts.id', 'accounts.code', 'accounts.name')
             ->get()
             ->map(fn ($r) => [
                 'account_id' => $r->id,
-                'code' => $r->code,
-                'name' => $r->name,
+                'account_code' => $r->code,
+                'account_name' => $r->name,
                 'amount' => (float) $r->total,
             ])
             ->values()
             ->toArray();
+
+        // Merge revenue by account (journal + transactions)
+        $revenueMap = [];
+        foreach (array_merge($journalRevenue, $txnRevenue) as $item) {
+            $key = $item['account_id'];
+            if (!isset($revenueMap[$key])) {
+                $revenueMap[$key] = $item;
+            } else {
+                $revenueMap[$key]['amount'] += $item['amount'];
+            }
+        }
+        $revenueByAccount = array_values($revenueMap);
 
         $expenseByAccount = Transaction::query()
             ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
@@ -58,8 +91,8 @@ class ReportController extends Controller
             ->get()
             ->map(fn ($r) => [
                 'account_id' => $r->id,
-                'code' => $r->code,
-                'name' => $r->name,
+                'account_code' => $r->code,
+                'account_name' => $r->name,
                 'amount' => (float) $r->total,
             ])
             ->values()
@@ -75,8 +108,8 @@ class ReportController extends Controller
             'total_revenue' => (float) $totalRevenue,
             'total_expenses' => (float) $totalExpenses,
             'net_profit' => (float) $netProfit,
-            'revenue_accounts' => $revenueByAccount,
-            'expense_accounts' => $expenseByAccount,
+            'revenue' => $revenueByAccount,
+            'expenses' => $expenseByAccount,
         ];
 
         return response()->json([
@@ -88,7 +121,9 @@ class ReportController extends Controller
 
     public function balanceSheet(Request $request): JsonResponse
     {
-        $dateTo = $request->filled('date_to') ? $request->date_to : now()->format('Y-m-d');
+        $dateTo = $request->filled('date_to')
+            ? $request->date_to
+            : ($request->filled('as_of') ? $request->as_of : now()->format('Y-m-d'));
 
         $accounts = Account::where('is_header', false)
             ->where('is_active', true)
@@ -131,8 +166,8 @@ class ReportController extends Controller
 
             $item = [
                 'account_id' => $account->id,
-                'code' => $account->code,
-                'name' => $account->name,
+                'account_code' => $account->code,
+                'account_name' => $account->name,
                 'balance' => (float) $balance,
             ];
 
@@ -451,9 +486,17 @@ class ReportController extends Controller
         usort($movements, fn ($a, $b) => strcmp($a['date'], $b['date']));
 
         $runningBalance = $openingBalance;
-        foreach ($movements as &$m) {
+        $entries = [];
+        foreach ($movements as $m) {
             $runningBalance += $m['debit'] - $m['credit'];
-            $m['balance'] = (float) round($runningBalance, 2);
+            $entries[] = [
+                'date' => $m['date'],
+                'description' => $m['description'],
+                'reference' => $m['reference'] ?? null,
+                'debit' => $m['debit'],
+                'credit' => $m['credit'],
+                'running_balance' => (float) round($runningBalance, 2),
+            ];
         }
 
         $data = [
@@ -465,7 +508,7 @@ class ReportController extends Controller
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
             'opening_balance' => (float) round($openingBalance, 2),
-            'movements' => $movements,
+            'entries' => $entries,
             'closing_balance' => (float) round($runningBalance, 2),
         ];
 
@@ -484,7 +527,7 @@ class ReportController extends Controller
             ->get();
 
         $buckets = ['current' => 0, '31_60' => 0, '61_90' => 0, '90_plus' => 0];
-        $byClient = [];
+        $rows = [];
         $today = now();
 
         foreach ($invoices as $inv) {
@@ -508,31 +551,32 @@ class ReportController extends Controller
             $buckets[$bucket] += $amount;
 
             $clientId = $inv->client_id;
-            if (!isset($byClient[$clientId])) {
-                $byClient[$clientId] = [
-                    'client_id' => $clientId,
-                    'client_name' => $inv->client?->name ?? 'Unknown',
-                    'client_code' => $inv->client?->code ?? null,
+            if (!isset($rows[$clientId])) {
+                $rows[$clientId] = [
+                    'name' => $inv->client?->name ?? 'Unknown',
                     'current' => 0,
-                    '31_60' => 0,
-                    '61_90' => 0,
-                    '90_plus' => 0,
+                    'days_31_60' => 0,
+                    'days_61_90' => 0,
+                    'over_90' => 0,
                     'total' => 0,
                 ];
             }
-            $byClient[$clientId][$bucket] += $amount;
-            $byClient[$clientId]['total'] += $amount;
+            $rows[$clientId]['current'] += $bucket === 'current' ? $amount : 0;
+            $rows[$clientId]['days_31_60'] += $bucket === '31_60' ? $amount : 0;
+            $rows[$clientId]['days_61_90'] += $bucket === '61_90' ? $amount : 0;
+            $rows[$clientId]['over_90'] += $bucket === '90_plus' ? $amount : 0;
+            $rows[$clientId]['total'] += $amount;
         }
 
         $data = [
             'as_of_date' => $today->format('Y-m-d'),
-            'by_client' => array_values($byClient),
+            'rows' => array_values($rows),
             'totals' => [
                 'current' => (float) $buckets['current'],
-                '31_60' => (float) $buckets['31_60'],
-                '61_90' => (float) $buckets['61_90'],
-                '90_plus' => (float) $buckets['90_plus'],
-                'grand_total' => (float) array_sum($buckets),
+                'days_31_60' => (float) $buckets['31_60'],
+                'days_61_90' => (float) $buckets['61_90'],
+                'over_90' => (float) $buckets['90_plus'],
+                'total' => (float) array_sum($buckets),
             ],
         ];
 
@@ -638,6 +682,12 @@ class ReportController extends Controller
             ];
         })->sortByDesc('amount')->values()->toArray();
 
+        $rows = array_map(fn ($r) => [
+            'client_name' => $r['client_name'],
+            'amount' => $r['amount'],
+            'percentage' => $r['percentage'],
+        ], $data);
+
         return response()->json([
             'success' => true,
             'message' => 'Income by Client report retrieved successfully',
@@ -645,7 +695,7 @@ class ReportController extends Controller
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'total_income' => (float) $grandTotal,
-                'by_client' => $data,
+                'rows' => $rows,
             ],
         ]);
     }
@@ -664,14 +714,12 @@ class ReportController extends Controller
 
         $grandTotal = $totals->sum('total');
 
-        $data = $totals->map(function ($row) use ($grandTotal) {
+        $rows = $totals->map(function ($row) use ($grandTotal) {
             $amount = (float) $row->total;
             $pct = $grandTotal > 0 ? ($amount / $grandTotal) * 100 : 0;
 
             return [
-                'account_id' => $row->id,
-                'code' => $row->code,
-                'name' => $row->name,
+                'category' => $row->name,
                 'amount' => $amount,
                 'percentage' => (float) round($pct, 2),
             ];
@@ -684,7 +732,7 @@ class ReportController extends Controller
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'total_expenses' => (float) $grandTotal,
-                'by_category' => $data,
+                'rows' => $rows,
             ],
         ]);
     }
@@ -700,7 +748,7 @@ class ReportController extends Controller
             $query->where('client_id', $request->client_id);
         }
 
-        $byStatus = $query->get()
+        $byStatusRaw = $query->get()
             ->groupBy('status')
             ->map(function ($items) {
                 $count = $items->count();
@@ -710,8 +758,12 @@ class ReportController extends Controller
                     'total_value' => (float) $totalValue,
                     'average_value' => $count > 0 ? (float) round($totalValue / $count, 2) : 0,
                 ];
-            })
-            ->toArray();
+            });
+
+        $byStatus = [];
+        foreach ($byStatusRaw as $status => $data) {
+            $byStatus[] = array_merge(['status' => $status], $data);
+        }
 
         $all = WorkOrder::when($request->filled('client_id'), fn ($q) => $q->where('client_id', $request->client_id))
             ->whereBetween('order_date', [$dateFrom, $dateTo])
@@ -724,6 +776,7 @@ class ReportController extends Controller
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
             'total_work_orders' => $totalWorkOrders,
+            'total_count' => $totalWorkOrders,
             'total_value' => (float) $totalValue,
             'average_value' => $totalWorkOrders > 0 ? (float) round($totalValue / $totalWorkOrders, 2) : 0,
             'by_status' => $byStatus,
@@ -738,7 +791,15 @@ class ReportController extends Controller
 
     public function payrollSummary(Request $request): JsonResponse
     {
-        [$dateFrom, $dateTo] = $this->dateRange($request);
+        // Accept month/year for frontend compatibility
+        if ($request->filled('month') && $request->filled('year')) {
+            $month = (int) $request->month;
+            $year = (int) $request->year;
+            $dateFrom = sprintf('%04d-%02d-01', $year, $month);
+            $dateTo = date('Y-m-t', strtotime($dateFrom));
+        } else {
+            [$dateFrom, $dateTo] = $this->dateRange($request);
+        }
 
         $query = PayrollRecord::with('employee:id,name,department')
             ->whereRaw('DATE(CONCAT(period_year, "-", LPAD(period_month, 2, "0"), "-01")) BETWEEN ? AND ?', [$dateFrom, $dateTo]);
@@ -747,27 +808,31 @@ class ReportController extends Controller
 
         $byEmployee = $records->groupBy('employee_id')->map(function ($items, $empId) {
             $first = $items->first();
+            $gross = (float) $items->sum('gross_pay');
+            $deductions = (float) $items->sum('total_deductions');
+            $tax = (float) $items->sum('tax_amount');
+            $net = (float) $items->sum('net_pay');
             return [
                 'employee_id' => $empId,
                 'employee_name' => $first->employee?->name ?? 'Unknown',
                 'department' => $first->employee?->department ?? null,
-                'count' => $items->count(),
-                'gross_pay' => (float) $items->sum('gross_pay'),
-                'total_deductions' => (float) $items->sum('total_deductions'),
-                'tax_amount' => (float) $items->sum('tax_amount'),
-                'net_pay' => (float) $items->sum('net_pay'),
+                'base_salary' => (float) $items->sum('base_salary'),
+                'overtime' => (float) $items->sum('overtime_amount'),
+                'allowances' => (float) $items->sum('total_allowances'),
+                'deductions' => $deductions,
+                'tax' => $tax,
+                'net_pay' => $net,
             ];
         })->values()->toArray();
 
-        $byDepartment = $records->groupBy(fn ($r) => $r->employee?->department ?? 'Unassigned')->map(function ($items) {
-            return [
+        $byDepartment = [];
+        foreach ($records->groupBy(fn ($r) => $r->employee?->department ?? 'Unassigned') as $dept => $items) {
+            $byDepartment[] = [
+                'department' => $dept,
                 'count' => $items->count(),
-                'total_gross' => (float) $items->sum('gross_pay'),
-                'total_deductions' => (float) $items->sum('total_deductions'),
-                'total_tax' => (float) $items->sum('tax_amount'),
-                'total_net' => (float) $items->sum('net_pay'),
+                'total' => (float) $items->sum('net_pay'),
             ];
-        })->toArray();
+        }
 
         $data = [
             'date_from' => $dateFrom,
@@ -792,20 +857,24 @@ class ReportController extends Controller
     {
         [$dateFrom, $dateTo] = $this->dateRange($request);
 
-        $invoiceTax = Invoice::whereBetween('issue_date', [$dateFrom, $dateTo])
+        $invoiceTax = (float) Invoice::whereBetween('issue_date', [$dateFrom, $dateTo])
             ->sum('tax_amount');
 
-        $payrollTax = PayrollRecord::whereRaw('DATE(CONCAT(period_year, "-", LPAD(period_month, 2, "0"), "-01")) BETWEEN ? AND ?', [$dateFrom, $dateTo])
+        $payrollTax = (float) PayrollRecord::whereRaw('DATE(CONCAT(period_year, "-", LPAD(period_month, 2, "0"), "-01")) BETWEEN ? AND ?', [$dateFrom, $dateTo])
             ->sum('tax_amount');
+
+        $rows = [
+            ['tax_type' => 'Sales', 'tax_name' => 'Invoice Tax Collected', 'amount' => $invoiceTax],
+            ['tax_type' => 'Payroll', 'tax_name' => 'Income Tax Withheld', 'amount' => $payrollTax],
+        ];
 
         $data = [
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
-            'by_type' => [
-                'invoice_tax_collected' => (float) $invoiceTax,
-                'payroll_income_tax_withheld' => (float) $payrollTax,
-            ],
-            'total' => (float) ($invoiceTax + $payrollTax),
+            'rows' => $rows,
+            'total_collected' => $invoiceTax,
+            'total_withheld' => $payrollTax,
+            'net_liability' => $invoiceTax + $payrollTax,
         ];
 
         return response()->json([

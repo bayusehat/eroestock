@@ -344,8 +344,14 @@ export default function PayrollPage() {
       />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:flex-wrap">
         <Select value={periodMonth} onValueChange={(v) => setPeriodMonth(v ?? "")}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Month" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Month">
+              {periodMonth
+                ? new Date(2000, parseInt(periodMonth, 10) - 1).toLocaleString("default", {
+                    month: "long",
+                  })
+                : null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">All months</SelectItem>
@@ -359,8 +365,10 @@ export default function PayrollPage() {
           </SelectContent>
         </Select>
         <Select value={periodYear} onValueChange={(v) => setPeriodYear(v ?? "")}>
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Year" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Year">
+              {periodYear || null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">All years</SelectItem>
@@ -395,8 +403,19 @@ export default function PayrollPage() {
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v ?? "all")}
           >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Status">
+                {statusFilter && statusFilter !== "all"
+                  ? (() => {
+                      const labels: Record<string, string> = {
+                        draft: "Draft",
+                        approved: "Approved",
+                        paid: "Paid",
+                      };
+                      return labels[statusFilter] ?? statusFilter;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All status</SelectItem>
@@ -409,8 +428,12 @@ export default function PayrollPage() {
             value={employeeFilter}
             onValueChange={(v) => setEmployeeFilter(v ?? "all")}
           >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Employee" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Employee">
+                {employeeFilter && employeeFilter !== "all"
+                  ? employees.find((e) => String(e.id) === employeeFilter)?.name ?? null
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All employees</SelectItem>
@@ -438,8 +461,14 @@ export default function PayrollPage() {
             <div className="space-y-2">
               <Label>Month</Label>
               <Select value={generateMonth} onValueChange={(v) => setGenerateMonth(v ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select month" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select month">
+                    {generateMonth
+                      ? new Date(2000, parseInt(generateMonth, 10) - 1).toLocaleString("default", {
+                          month: "long",
+                        })
+                      : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {months.map((m) => (
@@ -455,8 +484,10 @@ export default function PayrollPage() {
             <div className="space-y-2">
               <Label>Year</Label>
               <Select value={generateYear} onValueChange={(v) => setGenerateYear(v ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select year" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select year">
+                    {generateYear || null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {years.map((y) => (

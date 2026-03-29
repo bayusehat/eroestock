@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { t } from "@/lib/translations";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -16,6 +17,7 @@ import {
   BarChart3,
   Settings,
   Shield,
+  Send,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,55 +41,64 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
 
-const navItems = [
-  { section: "MAIN", items: [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] },
+const navItems: { section: string; items: { href: string; label: string; icon: typeof LayoutDashboard; permission?: string }[] }[] = [
+  { section: t.nav.main, items: [{ href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard }] },
   {
-    section: "BUSINESS",
+    section: t.nav.business,
     items: [
-      { href: "/work-orders", label: "Work Orders", icon: ClipboardList },
-      { href: "/clients", label: "Clients", icon: Building2 },
-      { href: "/vendors", label: "Vendors", icon: Truck },
-      { href: "/invoices", label: "Invoices", icon: FileText },
+      { href: "/work-orders", label: t.nav.workOrders, icon: ClipboardList, permission: "work_orders-view" },
+      { href: "/requests", label: t.nav.requests, icon: Send, permission: "budget_requests-view" },
+      { href: "/clients", label: t.nav.clients, icon: Building2, permission: "clients-view" },
+      { href: "/vendors", label: t.nav.vendors, icon: Truck, permission: "vendors-view" },
+      { href: "/invoices", label: t.nav.invoices, icon: FileText, permission: "invoices-view" },
     ],
   },
   {
-    section: "FINANCE",
+    section: t.nav.finance,
     items: [
-      { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-      { href: "/journal-entries", label: "Journal Entries", icon: BookOpen },
-      { href: "/accounts", label: "Chart of Accounts", icon: Network },
+      { href: "/transactions", label: t.nav.transactions, icon: ArrowLeftRight, permission: "transactions-view" },
+      { href: "/journal-entries", label: t.nav.journalEntries, icon: BookOpen, permission: "journal_entries-view" },
+      { href: "/accounts", label: t.nav.chartOfAccounts, icon: Network, permission: "accounts-view" },
     ],
   },
   {
-    section: "HR",
+    section: t.nav.hr,
     items: [
-      { href: "/employees", label: "Employees", icon: Users },
-      { href: "/payroll", label: "Payroll", icon: Banknote },
+      { href: "/employees", label: t.nav.employees, icon: Users, permission: "employees-view" },
+      { href: "/payroll", label: t.nav.payroll, icon: Banknote, permission: "payroll-view" },
     ],
   },
-  { section: "REPORTS", items: [{ href: "/reports", label: "Reports", icon: BarChart3 }] },
+  { section: t.nav.reports, items: [{ href: "/reports", label: t.nav.reportsMenu, icon: BarChart3, permission: "reports-view" }] },
   {
-    section: "SETTINGS",
+    section: t.nav.settings,
     items: [
-      { href: "/settings/company", label: "Settings", icon: Settings },
-      { href: "/settings/audit-logs", label: "Audit Logs", icon: Shield },
+      { href: "/settings/company", label: t.nav.companySettings, icon: Settings, permission: "settings-view" },
+      { href: "/settings/users", label: "Users", icon: Users, permission: "users-view" },
+      { href: "/settings/roles", label: "Roles", icon: Shield, permission: "roles-view" },
+      { href: "/settings/audit-logs", label: t.nav.auditLogs, icon: Shield, permission: "audit_logs-view" },
     ],
   },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
+
+  const filteredNavItems = navItems.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.permission || hasPermission(item.permission)),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <span className="text-lg">Personal Accounting</span>
+        <Link href="/dashboard" className="flex flex-col gap-0.5">
+          <span className="text-lg font-bold tracking-tight">{t.nav.appName}</span>
+          <span className="text-[11px] text-muted-foreground">{t.nav.tagline}</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        {navItems.map((group) => (
+        {filteredNavItems.map((group) => (
           <SidebarGroup key={group.section}>
             <SidebarGroupLabel>{group.section}</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -126,11 +137,11 @@ export function AppSidebar() {
             }
           />
           <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuItem render={<Link href="/settings/profile">Profile</Link>} />
-            <DropdownMenuItem render={<Link href="/settings/company">Settings</Link>} />
+            <DropdownMenuItem render={<Link href="/settings/profile">{t.nav.profile}</Link>} />
+            <DropdownMenuItem render={<Link href="/settings/company">{t.nav.companySettings}</Link>} />
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => logout()}>
-              Log out
+              {t.nav.logOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

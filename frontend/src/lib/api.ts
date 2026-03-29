@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
 const api: AxiosInstance = axios.create({
-  baseURL: "http://localhost:8000/api/v1",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -26,7 +26,6 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 && typeof window !== "undefined") {
       localStorage.removeItem(TOKEN_KEY);
-      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
@@ -58,6 +57,8 @@ export const apiClient = {
     api.post<T>(url, data, config),
   put: <T>(url: string, data?: unknown, config?: Parameters<typeof api.put>[2]) =>
     api.put<T>(url, data, config),
+  patch: <T>(url: string, data?: unknown, config?: Parameters<typeof api.patch>[2]) =>
+    api.patch<T>(url, data, config),
   delete: <T>(url: string, config?: Parameters<typeof api.delete>[1]) =>
     api.delete<T>(url, config),
 };

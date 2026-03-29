@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import type { Employee } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -61,6 +62,7 @@ export default function EditEmployeePage() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     setValue,
@@ -230,12 +232,17 @@ export default function EditEmployeePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="base_salary">Base Salary *</Label>
-                <Input
-                  id="base_salary"
-                  type="number"
-                  step="0.01"
-                  {...register("base_salary", { valueAsNumber: true })}
-                  aria-invalid={!!errors.base_salary}
+                <Controller
+                  name="base_salary"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      id="base_salary"
+                      value={field.value}
+                      onChange={field.onChange}
+                      aria-invalid={!!errors.base_salary}
+                    />
+                  )}
                 />
                 {errors.base_salary && (
                   <p className="text-sm text-destructive">

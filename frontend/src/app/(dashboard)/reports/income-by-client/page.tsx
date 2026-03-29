@@ -28,6 +28,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
+import { t } from "@/lib/translations";
 
 const CHART_COLORS = [
   "hsl(var(--chart-1))",
@@ -91,39 +92,43 @@ export default function IncomeByClientPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Income by Client"
-        description="Revenue breakdown by client"
+        title={t.reports.incomeByClient.title}
+        description={t.reports.incomeByClient.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
-            placeholder="From date"
-            className="w-[160px]"
+            placeholder={t.placeholders.fromDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
-            placeholder="To date"
-            className="w-[160px]"
+            placeholder={t.placeholders.toDate}
+            className="w-full"
           />
         </div>
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Income by Client</CardTitle>
+            <CardTitle>{t.reports.incomeByClient.byClient}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -149,7 +154,7 @@ export default function IncomeByClientPage() {
                 {sortedRows.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No income data for this period
+                      {t.reports.incomeByClient.noData}
                     </TableCell>
                   </TableRow>
                 )}
@@ -159,7 +164,7 @@ export default function IncomeByClientPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Distribution</CardTitle>
+            <CardTitle>{t.reports.incomeByClient.distribution}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -195,7 +200,7 @@ export default function IncomeByClientPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
-                  No data for chart
+                  {t.reports.profitLoss.noChartData}
                 </div>
               )}
             </div>

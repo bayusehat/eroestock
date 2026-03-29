@@ -14,7 +14,8 @@ class StoreWorkOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', 'exists:clients,id'],
+            'client_id' => ['nullable', 'exists:clients,id'],
+            'client_work_order_id' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category' => ['required', 'string', 'max:100'],

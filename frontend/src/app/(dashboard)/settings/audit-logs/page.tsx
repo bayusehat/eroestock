@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { t } from "@/lib/translations";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, Download } from "lucide-react";
 import { apiClient } from "@/lib/api";
@@ -200,24 +201,30 @@ export default function AuditLogsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Audit Logs"
-        description="System activity and change history"
+        title={t.nav.auditLogs}
+        description="Riwayat aktivitas dan perubahan sistem"
         children={
           <Button variant="outline" onClick={handleExportCsv}>
             <Download className="mr-2 size-4" />
-            Export CSV
+            {t.common.export} CSV
           </Button>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">User</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[180px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            Pengguna
+          </label>
           <Select value={userId} onValueChange={(v) => setUserId(v ?? "all")}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="All users" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Semua pengguna">
+                {userId && userId !== "all"
+                  ? users.find((u) => String(u.id) === userId)?.name ?? null
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All users</SelectItem>
+              <SelectItem value="all">Semua pengguna</SelectItem>
               {users.map((u) => (
                 <SelectItem key={u.id} value={String(u.id)}>
                   {u.name}
@@ -226,14 +233,33 @@ export default function AuditLogsPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">Module</label>
+        <div className="space-y-2 min-w-[180px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            Modul
+          </label>
           <Select value={module} onValueChange={(v) => setModule(v ?? "all")}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="All modules" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Semua modul">
+                {module && module !== "all"
+                  ? (() => {
+                      const labels: Record<string, string> = {
+                        invoices: "Invoices",
+                        transactions: "Transactions",
+                        accounts: "Accounts",
+                        clients: "Clients",
+                        vendors: "Vendors",
+                        work_orders: "Work Orders",
+                        payroll: "Payroll",
+                        users: "Users",
+                        roles: "Roles",
+                      };
+                      return labels[module] ?? module;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All modules</SelectItem>
+              <SelectItem value="all">Semua modul</SelectItem>
               <SelectItem value="invoices">Invoices</SelectItem>
               <SelectItem value="transactions">Transactions</SelectItem>
               <SelectItem value="accounts">Accounts</SelectItem>
@@ -246,14 +272,28 @@ export default function AuditLogsPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">Action</label>
+        <div className="space-y-2 min-w-[180px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            Aksi
+          </label>
           <Select value={action} onValueChange={(v) => setAction(v ?? "all")}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="All actions" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Semua aksi">
+                {action && action !== "all"
+                  ? (() => {
+                      const labels: Record<string, string> = {
+                        create: "Create",
+                        update: "Update",
+                        delete: "Delete",
+                        login: "Login",
+                      };
+                      return labels[action] ?? action;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">Semua</SelectItem>
               <SelectItem value="create">Create</SelectItem>
               <SelectItem value="update">Update</SelectItem>
               <SelectItem value="delete">Delete</SelectItem>
@@ -261,22 +301,26 @@ export default function AuditLogsPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
             placeholder="From"
-            className="w-[140px]"
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
             placeholder="To"
-            className="w-[140px]"
+            className="w-full"
           />
         </div>
       </div>

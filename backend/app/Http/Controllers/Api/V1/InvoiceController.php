@@ -10,6 +10,8 @@ use App\Http\Resources\V1\InvoiceResource;
 use App\Models\Account;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryLine;
 use App\Models\Transaction;
 use App\Models\WorkOrder;
 use App\Traits\GeneratesNumber;
@@ -68,6 +70,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'invoice_no' => $invoiceNo,
                 'client_id' => $request->client_id,
+                'work_order_id' => $request->work_order_id,
                 'issue_date' => $request->issue_date,
                 'due_date' => $request->due_date,
                 'status' => 'draft',
@@ -81,6 +84,10 @@ class InvoiceController extends Controller
                 'terms' => $request->terms,
                 'created_by' => $request->user()->id,
             ]);
+
+            if ($request->work_order_id) {
+                WorkOrder::where('id', $request->work_order_id)->update(['status' => 'invoiced']);
+            }
 
             foreach ($request->items as $item) {
                 $subtotal = $this->calculateItemSubtotal(
@@ -113,7 +120,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice): JsonResponse
     {
-        $invoice->load(['client', 'items', 'workOrder', 'transactions']);
+        $invoice->load(['client', 'items', 'workOrder', 'transactions.account', 'transactions.contraAccount']);
 
         return response()->json([
             'success' => true,
@@ -132,9 +139,10 @@ class InvoiceController extends Controller
         }
 
         $invoice = DB::transaction(function () use ($request, $invoice) {
-            $data = array_filter($request->only([
-                'client_id', 'issue_date', 'due_date', 'notes', 'terms',
-            ]), fn ($v) => $v !== null);
+            $data = $request->only([
+                'client_id', 'work_order_id', 'issue_date', 'due_date', 'notes', 'terms',
+            ]);
+            $data = array_filter($data, fn ($v, $k) => $k === 'work_order_id' || $v !== null, ARRAY_FILTER_USE_BOTH);
 
             if ($request->has('items')) {
                 $invoice->items()->delete();
@@ -323,12 +331,48 @@ class InvoiceController extends Controller
             ], 422);
         }
 
-        $invoice->update(['status' => 'sent']);
+        $result = DB::transaction(function () use ($invoice) {
+            $invoice->update(['status' => 'sent']);
+
+            $arAccount = Account::where('code', '1-2000')->first();
+            $revenueAccount = Account::where('code', '4-1000')->first();
+
+            if ($arAccount && $revenueAccount && (float) $invoice->grand_total > 0) {
+                $journalNo = GeneratesNumber::generateNumber('JE', 'journal_entries', 'journal_no', 'Y');
+                $amount = (string) $invoice->grand_total;
+                $desc = "Invoice {$invoice->invoice_no} - Revenue recognition";
+
+                $journalEntry = JournalEntry::create([
+                    'journal_no' => $journalNo,
+                    'date' => $invoice->issue_date,
+                    'description' => $desc,
+                    'created_by' => auth()->id() ?? $invoice->created_by ?? 1,
+                ]);
+
+                JournalEntryLine::create([
+                    'journal_entry_id' => $journalEntry->id,
+                    'account_id' => $arAccount->id,
+                    'debit' => $amount,
+                    'credit' => 0,
+                    'description' => "A/R - {$invoice->invoice_no}",
+                ]);
+
+                JournalEntryLine::create([
+                    'journal_entry_id' => $journalEntry->id,
+                    'account_id' => $revenueAccount->id,
+                    'debit' => 0,
+                    'credit' => $amount,
+                    'description' => "Revenue - {$invoice->invoice_no}",
+                ]);
+            }
+
+            return $invoice->fresh(['client', 'items', 'workOrder']);
+        });
 
         return response()->json([
             'success' => true,
             'message' => 'Invoice marked as sent successfully',
-            'data' => new InvoiceResource($invoice->fresh(['client', 'items', 'workOrder'])),
+            'data' => new InvoiceResource($result),
         ]);
     }
 

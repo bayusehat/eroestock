@@ -28,11 +28,16 @@ class RoleController extends Controller
             'name' => 'required|string|unique:roles,name',
             'permissions' => 'array',
             'permissions.*' => 'string|exists:permissions,name',
+            'permission_ids' => 'array',
+            'permission_ids.*' => 'integer|exists:permissions,id',
         ]);
 
-        $role = Role::create(['name' => $request->name]);
+        $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
 
-        if ($request->filled('permissions')) {
+        if ($request->filled('permission_ids')) {
+            $names = Permission::whereIn('id', $request->permission_ids)->pluck('name');
+            $role->syncPermissions($names);
+        } elseif ($request->filled('permissions')) {
             $role->syncPermissions($request->permissions);
         }
 
@@ -58,11 +63,16 @@ class RoleController extends Controller
             'name' => 'required|string|unique:roles,name,' . $role->id,
             'permissions' => 'array',
             'permissions.*' => 'string|exists:permissions,name',
+            'permission_ids' => 'array',
+            'permission_ids.*' => 'integer|exists:permissions,id',
         ]);
 
         $role->update(['name' => $request->name]);
 
-        if ($request->has('permissions')) {
+        if ($request->has('permission_ids')) {
+            $names = Permission::whereIn('id', $request->permission_ids)->pluck('name');
+            $role->syncPermissions($names);
+        } elseif ($request->has('permissions')) {
             $role->syncPermissions($request->permissions ?? []);
         }
 
@@ -92,9 +102,14 @@ class RoleController extends Controller
 
     public function permissions(): JsonResponse
     {
-        $permissions = Permission::all()->pluck('name')->groupBy(function ($name) {
-            return explode('-', $name)[0];
-        });
+        $permissions = Permission::all()->map(function (Permission $p) {
+            $parts = explode('-', $p->name);
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'module' => $parts[0] ?? 'General',
+            ];
+        })->values();
 
         return response()->json([
             'success' => true,

@@ -1,6 +1,6 @@
-# Personal Accounting Web Application
+# Kucatat — Catat, Kelola, Tumbuh.
 
-A full-featured accounting web application for small-to-medium businesses to manage work orders, track financial transactions, handle employee payroll, and generate financial reports.
+Kucatat adalah aplikasi pencatatan keuangan untuk UKM. Kelola work order, catat transaksi, atur payroll karyawan, dan buat laporan keuangan — semua dalam satu platform.
 
 ## Tech Stack
 
@@ -133,7 +133,7 @@ The backend exposes a RESTful JSON API at `/api/v1` with 97 endpoints covering a
 ## Project Structure
 
 ```
-personal-accounting/
+kucatat/
 ├── backend/                 # Laravel API
 │   ├── app/
 │   │   ├── Http/Controllers/Api/V1/   # API controllers

@@ -234,8 +234,19 @@ export default function EmployeesPage() {
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v ?? "all")}
           >
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Status">
+                {statusFilter && statusFilter !== "all"
+                  ? (() => {
+                      const labels: Record<string, string> = {
+                        active: "Active",
+                        on_leave: "On Leave",
+                        terminated: "Terminated",
+                      };
+                      return labels[statusFilter] ?? statusFilter;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All status</SelectItem>
@@ -248,8 +259,12 @@ export default function EmployeesPage() {
             value={departmentFilter}
             onValueChange={(v) => setDepartmentFilter(v ?? "all")}
           >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Department" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Department">
+                {departmentFilter && departmentFilter !== "all"
+                  ? departmentFilter
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All departments</SelectItem>

@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Personal Accounting",
-  description: "Personal accounting and financial management application",
+  title: "Kucatat — Pencatatan Keuangan Bisnis",
+  description: "Kucatat: aplikasi pencatatan keuangan untuk UKM. Kelola work order, transaksi, payroll, dan laporan keuangan dalam satu platform.",
 };
 
 export default function RootLayout({

@@ -15,6 +15,7 @@ class UpdateInvoiceRequest extends FormRequest
     {
         return [
             'client_id' => ['nullable', 'exists:clients,id'],
+            'work_order_id' => ['nullable', 'exists:work_orders,id'],
             'issue_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
             'items' => ['nullable', 'array', 'min:1'],

@@ -13,6 +13,7 @@ class WorkOrderResource extends JsonResource
             'id' => $this->id,
             'wo_number' => $this->wo_number,
             'client_id' => $this->client_id,
+            'client_work_order_id' => $this->client_work_order_id,
             'title' => $this->title,
             'description' => $this->description,
             'category' => $this->category,

@@ -37,6 +37,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { Briefcase, DollarSign, BarChart3 } from "lucide-react";
+import { t } from "@/lib/translations";
 
 const CHART_COLORS = [
   "hsl(var(--chart-1))",
@@ -117,6 +118,7 @@ export default function WorkOrderSummaryPage() {
     average_value: 0,
     by_status: [],
   };
+  const totalCount = report.total_count ?? report.total_work_orders ?? 0;
 
   const chartData = (report.by_status ?? []).map((s, i) => ({
     name: s.status,
@@ -127,42 +129,52 @@ export default function WorkOrderSummaryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Work Order Summary"
-        description="Work orders by status and value"
+        title={t.reports.workOrderSummary.title}
+        description={t.reports.workOrderSummary.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
-            placeholder="From date"
-            className="w-[160px]"
+            placeholder={t.placeholders.fromDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
-            placeholder="To date"
-            className="w-[160px]"
+            placeholder={t.placeholders.toDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">Client</label>
+        <div className="space-y-2 min-w-[180px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.reports.workOrderSummary.client}
+          </label>
           <Select value={clientId} onValueChange={(v) => setClientId(v ?? "all")}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All clients" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t.reports.workOrderSummary.allClients}>
+                {clientId && clientId !== "all"
+                  ? clients.find((c) => String(c.id) === clientId)?.name ?? null
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All clients</SelectItem>
+              <SelectItem value="all">{t.reports.workOrderSummary.allClients}</SelectItem>
               {clients.map((c) => (
                 <SelectItem key={c.id} value={String(c.id)}>
                   {c.name}
@@ -174,17 +186,17 @@ export default function WorkOrderSummaryPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
-          title="Total Work Orders"
-          value={report.total_count}
+          title={t.reports.workOrderSummary.totalWorkOrders}
+          value={totalCount}
           icon={Briefcase}
         />
         <StatCard
-          title="Total Value"
+          title={t.reports.workOrderSummary.totalValue}
           value={formatCurrency(report.total_value)}
           icon={DollarSign}
         />
         <StatCard
-          title="Average Value"
+          title={t.reports.workOrderSummary.averageValue}
           value={formatCurrency(report.average_value)}
           icon={BarChart3}
         />
@@ -192,15 +204,15 @@ export default function WorkOrderSummaryPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Status Breakdown</CardTitle>
+            <CardTitle>{t.reports.workOrderSummary.statusBreakdown}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Count</TableHead>
-                  <TableHead className="text-right">Total Value</TableHead>
+                    <TableHead>{t.common.status}</TableHead>
+                    <TableHead className="text-right">{t.common.count}</TableHead>
+                    <TableHead className="text-right">{t.reports.workOrderSummary.totalValue}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -216,7 +228,7 @@ export default function WorkOrderSummaryPage() {
                 {(!report.by_status || report.by_status.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No work order data for this period
+                      {t.reports.workOrderSummary.noData}
                     </TableCell>
                   </TableRow>
                 )}
@@ -226,7 +238,7 @@ export default function WorkOrderSummaryPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>By Status</CardTitle>
+            <CardTitle>{t.reports.workOrderSummary.byStatus}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -262,7 +274,7 @@ export default function WorkOrderSummaryPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
-                  No data for chart
+                  {t.reports.profitLoss.noChartData}
                 </div>
               )}
             </div>

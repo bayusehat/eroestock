@@ -34,6 +34,7 @@ import { formatCurrency } from "@/lib/format";
 import { downloadPdf } from "@/lib/download";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { t } from "@/lib/translations";
 
 const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))"];
 
@@ -70,9 +71,9 @@ export default function ProfitLossPage() {
         `/exports/report/profit-loss/pdf?date_from=${range.from}&date_to=${range.to}`,
         `profit-loss-${range.from}-${range.to}.pdf`
       );
-      toast.success("PDF downloaded");
+      toast.success(t.toast.pdfDownloaded);
     } catch {
-      toast.error("Failed to download PDF");
+      toast.error(t.toast.pdfFailed);
     }
   };
 
@@ -104,61 +105,65 @@ export default function ProfitLossPage() {
     report.chart_data && report.chart_data.length > 0
       ? report.chart_data
       : [
-          { month: "Revenue", revenue: report.total_revenue, expenses: 0 },
-          { month: "Expenses", revenue: 0, expenses: report.total_expenses },
+          { month: t.reports.profitLoss.revenueLabel, revenue: report.total_revenue, expenses: 0 },
+          { month: t.reports.profitLoss.expensesLabel, revenue: 0, expenses: report.total_expenses },
         ];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Profit & Loss"
-        description="Revenue, expenses, and net profit"
+        title={t.reports.profitLoss.title}
+        description={t.reports.profitLoss.description}
         children={
           <div className="flex items-center gap-2">
             <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
               <ArrowLeft className="mr-2 size-4" />
-              Back
+              {t.common.back}
             </Link>
             <Button onClick={handleExportPdf}>
               <FileDown className="mr-2 size-4" />
-              Export PDF
+              {t.reports.profitLoss.exportPdf}
             </Button>
           </div>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
-            placeholder="From date"
-            className="w-[160px]"
+            placeholder={t.placeholders.fromDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
-            placeholder="To date"
-            className="w-[160px]"
+            placeholder={t.placeholders.toDate}
+            className="w-full"
           />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
-          title="Total Revenue"
+          title={t.reports.profitLoss.totalRevenue}
           value={formatCurrency(report.total_revenue)}
           icon={TrendingUp}
         />
         <StatCard
-          title="Total Expenses"
+          title={t.reports.profitLoss.totalExpenses}
           value={formatCurrency(report.total_expenses)}
           icon={TrendingDown}
         />
         <StatCard
-          title="Net Profit"
+          title={t.reports.profitLoss.netProfit}
           value={formatCurrency(report.net_profit)}
           icon={TrendingUp}
           className={
@@ -171,14 +176,14 @@ export default function ProfitLossPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Revenue</CardTitle>
+            <CardTitle>{t.reports.profitLoss.revenue}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>{t.reports.generalLedger.account}</TableHead>
+                    <TableHead className="text-right">{t.common.amount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -195,7 +200,7 @@ export default function ProfitLossPage() {
                 {(!report.revenue || report.revenue.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={2} className="text-center text-muted-foreground">
-                      No revenue data
+                      {t.reports.profitLoss.noRevenueData}
                     </TableCell>
                   </TableRow>
                 )}
@@ -205,14 +210,14 @@ export default function ProfitLossPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Expenses</CardTitle>
+            <CardTitle>{t.reports.profitLoss.expenses}</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Account</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>{t.reports.generalLedger.account}</TableHead>
+                    <TableHead className="text-right">{t.common.amount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -229,7 +234,7 @@ export default function ProfitLossPage() {
                 {(!report.expenses || report.expenses.length === 0) && (
                   <TableRow>
                     <TableCell colSpan={2} className="text-center text-muted-foreground">
-                      No expense data
+                      {t.reports.profitLoss.noExpenseData}
                     </TableCell>
                   </TableRow>
                 )}
@@ -240,7 +245,7 @@ export default function ProfitLossPage() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Revenue vs Expenses</CardTitle>
+            <CardTitle>{t.reports.profitLoss.revenueVsExpenses}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64">
@@ -255,13 +260,13 @@ export default function ProfitLossPage() {
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
                   />
                   <Legend />
-                  <Bar dataKey="revenue" fill={CHART_COLORS[0]} name="Revenue" />
-                  <Bar dataKey="expenses" fill={CHART_COLORS[1]} name="Expenses" />
+                  <Bar dataKey="revenue" fill={CHART_COLORS[0]} name={t.reports.profitLoss.revenueLabel} />
+                  <Bar dataKey="expenses" fill={CHART_COLORS[1]} name={t.reports.profitLoss.expensesLabel} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
-                No chart data available
+                {t.reports.profitLoss.noChartData}
               </div>
             )}
           </div>

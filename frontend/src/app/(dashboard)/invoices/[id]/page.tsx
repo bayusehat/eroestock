@@ -12,6 +12,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { fetchFlattenedAccounts } from "@/lib/accounts";
 import type { Account, Invoice } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -56,7 +58,20 @@ const INVOICE_STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-muted text-muted-foreground",
 };
 
-const PAYMENT_METHODS = ["Cash", "Bank Transfer", "Credit Card", "Debit Card", "Other"];
+const PAYMENT_METHODS: { value: string; label: string }[] = [
+  { value: "cash", label: "Cash" },
+  { value: "bank_transfer", label: "Bank Transfer" },
+  { value: "check", label: "Check" },
+  { value: "other", label: "Other" },
+];
+
+/** Default account codes by payment method (from standard chart of accounts) */
+const DEFAULT_ACCOUNT_BY_METHOD: Record<string, string> = {
+  cash: "1-1001",
+  bank_transfer: "1-1002",
+  check: "1-1002",
+  other: "1-1002",
+};
 
 async function fetchInvoice(id: string): Promise<Invoice> {
   const res = await apiClient.get<{ data: Invoice }>(`/invoices/${id}`);
@@ -65,9 +80,7 @@ async function fetchInvoice(id: string): Promise<Invoice> {
 }
 
 async function fetchAccounts(): Promise<Account[]> {
-  const res = await apiClient.get<{ data: Account[] }>("/accounts");
-  const body = res.data as { data: Account[] };
-  return body.data ?? (body as unknown as Account[]);
+  return fetchFlattenedAccounts();
 }
 
 export default function InvoiceDetailPage() {
@@ -77,7 +90,7 @@ export default function InvoiceDetailPage() {
   const queryClient = useQueryClient();
   const id = params.id as string;
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0] ?? "");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentAccountId, setPaymentAccountId] = useState<string>("");
@@ -95,7 +108,7 @@ export default function InvoiceDetailPage() {
   });
 
   const sendMutation = useMutation({
-    mutationFn: () => apiClient.post(`/invoices/${id}/send`),
+    mutationFn: () => apiClient.patch(`/invoices/${id}/send`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoice", id] });
       toast.success("Invoice sent");
@@ -113,16 +126,16 @@ export default function InvoiceDetailPage() {
   const paymentMutation = useMutation({
     mutationFn: (payload: {
       amount: number;
-      date: string;
-      payment_method?: string;
-      account_id?: number;
+      payment_date: string;
+      payment_method: string;
+      account_id: number;
       reference_no?: string;
-    }) => apiClient.post(`/invoices/${id}/payments`, payload),
+    }) => apiClient.post(`/invoices/${id}/payment`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoice", id] });
       toast.success("Payment recorded");
       setPaymentDialogOpen(false);
-      setPaymentAmount("");
+      setPaymentAmount(0);
       setPaymentDate(new Date().toISOString().split("T")[0] ?? "");
       setPaymentMethod("");
       setPaymentAccountId("");
@@ -144,9 +157,26 @@ export default function InvoiceDetailPage() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!paymentDialogOpen || accounts.length === 0) return;
+    const method = paymentMethod || "bank_transfer";
+    if (!paymentMethod) setPaymentMethod(method);
+    const preferredCode = DEFAULT_ACCOUNT_BY_METHOD[method];
+    const preferred = accounts.find((a) => a.code === preferredCode);
+    if (preferred) {
+      setPaymentAccountId(String(preferred.id));
+      return;
+    }
+    const cashBankAccounts = accounts.filter(
+      (a) => a.code?.startsWith("1-100") && !a.is_header
+    );
+    if (cashBankAccounts.length > 0) {
+      setPaymentAccountId(String(cashBankAccounts[0].id));
+    }
+  }, [paymentDialogOpen, accounts, paymentMethod]);
+
   const handleRecordPayment = () => {
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
+    if (paymentAmount <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
@@ -154,11 +184,19 @@ export default function InvoiceDetailPage() {
       toast.error("Please select a date");
       return;
     }
+    if (!paymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+    if (!paymentAccountId) {
+      toast.error("Please select an account (e.g. Bank)");
+      return;
+    }
     paymentMutation.mutate({
-      amount,
-      date: paymentDate,
-      payment_method: paymentMethod || undefined,
-      account_id: paymentAccountId ? parseInt(paymentAccountId, 10) : undefined,
+      amount: paymentAmount,
+      payment_date: paymentDate,
+      payment_method: paymentMethod,
+      account_id: parseInt(paymentAccountId, 10),
       reference_no: paymentRef || undefined,
     });
   };
@@ -367,26 +405,55 @@ export default function InvoiceDetailPage() {
       </Card>
       {(invoice.payments?.length ?? 0) > 0 && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Payment History</CardTitle>
+            <Link
+              href="/reports/general-ledger"
+              className="text-sm text-primary hover:underline"
+            >
+              View in Ledger →
+            </Link>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
+                  <TableHead>Reference</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Payment Method</TableHead>
-                  <TableHead>Reference</TableHead>
+                  <TableHead>Account</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {invoice.payments?.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>{formatDate(p.date)}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/transactions/${p.id}`}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {"transaction_no" in p ? p.transaction_no : `#${p.id}`}
+                      </Link>
+                    </TableCell>
                     <TableCell>{formatCurrency(p.amount)}</TableCell>
-                    <TableCell>{p.payment_method ?? "-"}</TableCell>
-                    <TableCell>{p.reference_no ?? "-"}</TableCell>
+                    <TableCell>
+                      {PAYMENT_METHODS.find((m) => m.value === p.payment_method)
+                        ?.label ?? p.payment_method ?? "-"}
+                    </TableCell>
+                    <TableCell>{p.account?.name ?? "-"}</TableCell>
+                    <TableCell>
+                      {p.account_id && (
+                        <Link
+                          href={`/reports/general-ledger?account_id=${p.account_id}`}
+                          className="text-xs text-muted-foreground hover:underline"
+                        >
+                          Ledger
+                        </Link>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -402,11 +469,9 @@ export default function InvoiceDetailPage() {
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>Amount *</Label>
-              <Input
-                type="number"
-                step="0.01"
+              <CurrencyInput
                 value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
+                onChange={setPaymentAmount}
                 placeholder="0"
               />
               {balanceDue > 0 && (
@@ -424,25 +489,34 @@ export default function InvoiceDetailPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Payment Method</Label>
+              <Label>Payment Method *</Label>
               <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v ?? "")}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select method" />
                 </SelectTrigger>
                 <SelectContent>
                   {PAYMENT_METHODS.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Account</Label>
+              <Label>Account *</Label>
               <Select value={paymentAccountId} onValueChange={(v) => setPaymentAccountId(v ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select account">
+                    {paymentAccountId
+                      ? (() => {
+                          const a = accounts.find(
+                            (acc) => String(acc.id) === paymentAccountId
+                          );
+                          return a ? `${a.code} - ${a.name}` : null;
+                        })()
+                      : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {accounts

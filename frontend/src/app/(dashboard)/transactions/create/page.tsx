@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { apiClient } from "@/lib/api";
-import type { Account } from "@/types";
+import { fetchFlattenedAccounts } from "@/lib/accounts";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -37,24 +38,21 @@ const createTransactionSchema = z.object({
   date: z.string().min(1, "Date is required"),
   amount: z.number().min(0.01, "Amount is required"),
   account_id: z.number().min(1, "Account is required"),
-  contra_account_id: z.number().optional(),
+  contra_account_id: z.number().min(1, "Contra account is required"),
   description: z.string().optional(),
   reference_no: z.string().optional(),
   payment_method: z.string().optional(),
   category: z.string().optional(),
   client_id: z.number().optional(),
   vendor_id: z.number().optional(),
-});
+}).refine(
+  (data) => data.account_id !== data.contra_account_id,
+  { message: "Account and contra account must be different", path: ["contra_account_id"] }
+);
 
 type CreateTransactionForm = z.infer<typeof createTransactionSchema>;
 
-async function fetchAccounts(): Promise<Account[]> {
-  const res = await apiClient.get<{ data: Account[] }>("/accounts");
-  const body = res.data as { data: Account[] };
-  return body.data ?? (body as unknown as Account[]);
-}
-
-const PAYMENT_METHODS = ["Cash", "Bank Transfer", "Credit Card", "Debit Card", "Other"];
+const PAYMENT_METHODS = ["Cash", "Bank Transfer", "Check", "Credit Card", "Debit Card", "Other"];
 
 export default function CreateTransactionPage() {
   const router = useRouter();
@@ -62,11 +60,12 @@ export default function CreateTransactionPage() {
 
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
-    queryFn: fetchAccounts,
+    queryFn: fetchFlattenedAccounts,
   });
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     setValue,
@@ -78,7 +77,7 @@ export default function CreateTransactionPage() {
       date: new Date().toISOString().split("T")[0] ?? "",
       amount: 0,
       account_id: 0 as unknown as number,
-      contra_account_id: undefined,
+      contra_account_id: 0 as unknown as number,
       description: "",
       reference_no: "",
       payment_method: "",
@@ -99,7 +98,7 @@ export default function CreateTransactionPage() {
         contra_account_id: data.contra_account_id,
         description: data.description || undefined,
         reference_no: data.reference_no || undefined,
-        payment_method: data.payment_method || undefined,
+        payment_method: data.payment_method ? data.payment_method : undefined,
         category: data.category || undefined,
         client_id: data.client_id,
         vendor_id: data.vendor_id,
@@ -108,14 +107,19 @@ export default function CreateTransactionPage() {
       toast.success("Transaction recorded successfully");
       router.push("/transactions");
     } catch (err: unknown) {
-      const message =
-        err && typeof err === "object" && "response" in err
-          ? (err as { response?: { data?: { message?: string } } }).response?.data
-              ?.message
-          : "Failed to record transaction";
-      toast.error(
-        typeof message === "string" ? message : "Failed to record transaction"
-      );
+      let message = "Failed to record transaction";
+      if (err && typeof err === "object" && "response" in err) {
+        const data = (err as { response?: { data?: unknown } }).response?.data;
+        if (data && typeof data === "object") {
+          const d = data as { message?: string; errors?: Record<string, string[]> };
+          if (typeof d.message === "string") message = d.message;
+          else if (d.errors && typeof d.errors === "object") {
+            const first = Object.values(d.errors).flat()[0];
+            if (typeof first === "string") message = first;
+          }
+        }
+      }
+      toast.error(message);
     }
   }
 
@@ -169,12 +173,17 @@ export default function CreateTransactionPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="amount">Amount *</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  {...register("amount")}
-                  aria-invalid={!!errors.amount}
+                <Controller
+                  name="amount"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      id="amount"
+                      value={field.value}
+                      onChange={field.onChange}
+                      aria-invalid={!!errors.amount}
+                    />
+                  )}
                 />
                 {errors.amount && (
                   <p className="text-sm text-destructive">
@@ -189,12 +198,19 @@ export default function CreateTransactionPage() {
                 value={watch("account_id") ? String(watch("account_id")) : ""}
                 onValueChange={(v) => setValue("account_id", parseInt(v ?? "0", 10))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select account" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select account">
+                    {watch("account_id")
+                      ? (() => {
+                          const a = accounts.find((acc) => acc.id === watch("account_id"));
+                          return a ? `${a.code} - ${a.name}` : null;
+                        })()
+                      : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {accounts
-                    .filter((a) => !a.is_header)
+                    .filter((a) => !a.is_header && a.id !== watch("contra_account_id"))
                     .map((a) => (
                       <SelectItem key={a.id} value={String(a.id)}>
                         {a.code} - {a.name}
@@ -208,34 +224,46 @@ export default function CreateTransactionPage() {
                 </p>
               )}
             </div>
-            {(txType === "transfer" || txType === "income") && (
-              <div className="space-y-2">
-                <Label>Contra Account</Label>
-                <Select
-                  value={
-                    watch("contra_account_id")
-                      ? String(watch("contra_account_id"))
-                      : ""
-                  }
-                  onValueChange={(v) =>
-                    setValue("contra_account_id", v && v !== "none" ? parseInt(v, 10) : undefined)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select contra account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts
-                      .filter((a) => !a.is_header)
-                      .map((a) => (
-                        <SelectItem key={a.id} value={String(a.id)}>
-                          {a.code} - {a.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Contra Account *</Label>
+              <Select
+                value={
+                  watch("contra_account_id")
+                    ? String(watch("contra_account_id"))
+                    : ""
+                }
+                onValueChange={(v) =>
+                  setValue("contra_account_id", v ? parseInt(v, 10) : 0)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select contra account">
+                    {watch("contra_account_id")
+                      ? (() => {
+                          const a = accounts.find(
+                            (acc) => acc.id === watch("contra_account_id")
+                          );
+                          return a ? `${a.code} - ${a.name}` : null;
+                        })()
+                      : null}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts
+                    .filter((a) => !a.is_header && a.id !== watch("account_id"))
+                    .map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.code} - {a.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              {errors.contra_account_id && (
+                <p className="text-sm text-destructive">
+                  {errors.contra_account_id.message}
+                </p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input id="description" {...register("description")} />
@@ -251,7 +279,7 @@ export default function CreateTransactionPage() {
                   value={watch("payment_method") || ""}
                   onValueChange={(v) => setValue("payment_method", v ?? "")}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select method" />
                   </SelectTrigger>
                   <SelectContent>
@@ -264,12 +292,12 @@ export default function CreateTransactionPage() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="w-full space-y-2">
               <Label htmlFor="category">Category</Label>
               <Input id="category" {...register("category")} />
             </div>
             {txType === "income" && (
-              <div className="space-y-2">
+              <div className="w-full space-y-2">
                 <Label>Client</Label>
                 <ClientSelect
                   value={watch("client_id") ?? null}
@@ -278,7 +306,7 @@ export default function CreateTransactionPage() {
               </div>
             )}
             {txType === "expense" && (
-              <div className="space-y-2">
+              <div className="w-full space-y-2">
                 <Label>Vendor</Label>
                 <VendorSelect
                   value={watch("vendor_id") ?? null}

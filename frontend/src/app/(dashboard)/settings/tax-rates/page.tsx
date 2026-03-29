@@ -64,7 +64,7 @@ export default function TaxRatesPage() {
   const [deleteTaxRate, setDeleteTaxRate] = useState<TaxRate | null>(null);
   const [formName, setFormName] = useState("");
   const [formRate, setFormRate] = useState("");
-  const [formType, setFormType] = useState("sales_tax");
+  const [formType, setFormType] = useState("sales");
   const [formIsDefault, setFormIsDefault] = useState(false);
 
   const { data: taxRates = [], isLoading } = useQuery({
@@ -162,7 +162,7 @@ export default function TaxRatesPage() {
   function resetForm() {
     setFormName("");
     setFormRate("");
-    setFormType("sales_tax");
+    setFormType("sales");
     setFormIsDefault(false);
   }
 
@@ -205,8 +205,8 @@ export default function TaxRatesPage() {
   }
 
   const TAX_TYPES = [
-    { value: "sales_tax", label: "Sales Tax" },
-    { value: "income_tax", label: "Income Tax" },
+    { value: "sales", label: "Sales Tax" },
+    { value: "income", label: "Income Tax" },
     { value: "withholding", label: "Withholding" },
   ];
 
@@ -329,9 +329,11 @@ export default function TaxRatesPage() {
             </div>
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select value={formType} onValueChange={(v) => setFormType(v ?? "sales_tax")}>
-                <SelectTrigger>
-                  <SelectValue />
+              <Select value={formType} onValueChange={(v) => setFormType(v ?? "sales")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {TAX_TYPES.find((t) => t.value === formType)?.label ?? null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {TAX_TYPES.map((t) => (

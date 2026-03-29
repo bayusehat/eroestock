@@ -15,6 +15,7 @@ class UpdateWorkOrderRequest extends FormRequest
     {
         return [
             'client_id' => ['nullable', 'exists:clients,id'],
+            'client_work_order_id' => ['nullable', 'string', 'max:255'],
             'title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'category' => ['nullable', 'string', 'max:100'],

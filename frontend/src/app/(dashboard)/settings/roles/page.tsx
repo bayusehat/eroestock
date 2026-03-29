@@ -150,7 +150,15 @@ export default function RolesPage() {
   function openEdit(role: Role) {
     setEditingRole(role);
     setRoleName(role.name);
-    setSelectedPerms(role.permissions?.map((p) => p.id) ?? []);
+    // API returns permissions as string[] (names); resolve to IDs using permissions list
+    const permNames = (role.permissions ?? []).map((p) =>
+      typeof p === "string" ? p : (p as Permission).name
+    );
+    setSelectedPerms(
+      permNames
+        .map((name) => permissions.find((p) => p.name === name)?.id)
+        .filter((id): id is number => id != null)
+    );
     setDialogOpen(true);
   }
 

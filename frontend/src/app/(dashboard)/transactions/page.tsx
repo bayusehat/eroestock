@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { type ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Eye, Plus, TrendingUp, TrendingDown } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { fetchFlattenedAccounts } from "@/lib/accounts";
 import type { Transaction } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { DataTable } from "@/components/data-table";
@@ -35,9 +36,14 @@ const TX_TYPE_COLORS: Record<string, string> = {
 };
 
 async function fetchTransactions(): Promise<Transaction[]> {
-  const res = await apiClient.get<{ data: Transaction[] }>("/transactions");
-  const body = res.data as { data: Transaction[] };
-  return body.data ?? (body as unknown as Transaction[]);
+  const res = await apiClient.get<{ data: Transaction[] | { data: Transaction[] } }>("/transactions");
+  const body = res.data as { data?: Transaction[] | { data?: Transaction[] } };
+  const raw = body.data;
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object" && "data" in raw && Array.isArray((raw as { data: Transaction[] }).data)) {
+    return (raw as { data: Transaction[] }).data;
+  }
+  return [];
 }
 
 export default function TransactionsPage() {
@@ -53,11 +59,7 @@ export default function TransactionsPage() {
 
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: { id: number; name: string }[] }>("/accounts");
-      const body = res.data as { data: { id: number; name: string }[] };
-      return body.data ?? [];
-    },
+    queryFn: fetchFlattenedAccounts,
   });
 
   const filteredData = useMemo(() => {
@@ -242,8 +244,19 @@ export default function TransactionsPage() {
             className="max-w-sm"
           />
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Type" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Type">
+                {typeFilter && typeFilter !== "all"
+                  ? (() => {
+                      const labels: Record<string, string> = {
+                        income: "Income",
+                        expense: "Expense",
+                        transfer: "Transfer",
+                      };
+                      return labels[typeFilter] ?? typeFilter;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
@@ -253,21 +266,38 @@ export default function TransactionsPage() {
             </SelectContent>
           </Select>
           <Select value={accountFilter} onValueChange={(v) => setAccountFilter(v ?? "all")}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Account" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Account">
+                {accountFilter && accountFilter !== "all"
+                  ? (() => {
+                      const a = accounts.find(
+                        (acc) => String(acc.id) === accountFilter
+                      );
+                      return a ? `${a.code} - ${a.name}` : null;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All accounts</SelectItem>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={String(a.id)}>
-                  {a.name}
-                </SelectItem>
-              ))}
+              {accounts
+                .filter((a) => !a.is_header)
+                .map((a) => (
+                  <SelectItem key={a.id} value={String(a.id)}>
+                    {a.code} - {a.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
           <Select value={reconciledFilter} onValueChange={(v) => setReconciledFilter(v ?? "all")}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Reconciled" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Reconciled">
+                {reconciledFilter && reconciledFilter !== "all"
+                  ? reconciledFilter === "yes"
+                    ? "Reconciled"
+                    : "Not reconciled"
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>

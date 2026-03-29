@@ -16,7 +16,15 @@ class UpdateTransactionRequest extends FormRequest
         return [
             'type' => ['nullable', 'in:income,expense,transfer'],
             'date' => ['nullable', 'date'],
-            'amount' => ['nullable', 'numeric', 'min:0.01'],
+            'amount' => [
+                'nullable',
+                'numeric',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value !== null && abs((float) $value) < 0.01) {
+                        $fail('The amount must be at least 0.01.');
+                    }
+                },
+            ],
             'account_id' => ['nullable', 'exists:accounts,id'],
             'contra_account_id' => ['nullable', 'exists:accounts,id', 'different:account_id'],
             'client_id' => ['nullable', 'exists:clients,id'],

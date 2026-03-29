@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChevronDown,
@@ -9,7 +10,7 @@ import {
   Pencil,
   MoreHorizontal,
 } from "lucide-react";
-import { apiClient } from "@/lib/api";
+import { fetchFlattenedAccounts } from "@/lib/accounts";
 import { formatCurrency } from "@/lib/format";
 import type { Account } from "@/types";
 import { PageHeader } from "@/components/page-header";
@@ -35,12 +36,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 const ACCOUNT_TYPES = ["Asset", "Liability", "Equity", "Revenue", "Expense"];
-
-async function fetchAccounts(): Promise<Account[]> {
-  const res = await apiClient.get<{ data: Account[] }>("/accounts");
-  const body = res.data as { data: Account[] };
-  return body.data ?? (body as unknown as Account[]);
-}
 
 function buildAccountTree(accounts: Account[], parentId?: number): Account[] {
   return accounts
@@ -109,7 +104,7 @@ function AccountRow({
           <Badge variant="outline">{account.type}</Badge>
         </td>
         <td className="p-2 text-right font-mono">
-          {formatCurrency(account.opening_balance ?? 0)}
+          {formatCurrency(account.balance ?? account.opening_balance ?? 0)}
         </td>
         <td className="p-2">
           <DropdownMenu>
@@ -122,7 +117,14 @@ function AccountRow({
               }
             />
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem
+                render={
+                  <Link href={`/accounts/${account.id}/edit`}>
+                    <Pencil className="mr-2 size-4" />
+                    Edit
+                  </Link>
+                }
+              />
               {!account.is_system && (
                 <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
               )}
@@ -153,7 +155,7 @@ export default function AccountsPage() {
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ["accounts"],
-    queryFn: fetchAccounts,
+    queryFn: fetchFlattenedAccounts,
   });
 
   const rootAccounts = buildAccountTree(accounts);

@@ -17,6 +17,7 @@ class RolePermissionSeeder extends Seeder
             'clients' => ['view', 'create', 'edit', 'delete'],
             'vendors' => ['view', 'create', 'edit', 'delete'],
             'work_orders' => ['view', 'create', 'edit', 'delete'],
+            'budget_requests' => ['view', 'create', 'edit', 'delete'],
             'invoices' => ['view', 'create', 'edit', 'delete'],
             'transactions' => ['view', 'create', 'edit', 'delete'],
             'journal_entries' => ['view', 'create', 'edit', 'delete'],
@@ -45,7 +46,7 @@ class RolePermissionSeeder extends Seeder
         );
 
         $accountantPermissions = collect();
-        foreach (['work_orders', 'invoices', 'transactions', 'journal_entries', 'accounts', 'clients', 'vendors'] as $mod) {
+        foreach (['work_orders', 'budget_requests', 'invoices', 'transactions', 'journal_entries', 'accounts', 'clients', 'vendors'] as $mod) {
             $accountantPermissions = $accountantPermissions->merge(
                 Permission::where('name', 'like', "{$mod}-%")->pluck('name')
             );

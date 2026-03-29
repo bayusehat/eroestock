@@ -15,6 +15,7 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'client_id' => ['required', 'exists:clients,id'],
+            'work_order_id' => ['nullable', 'exists:work_orders,id'],
             'issue_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:issue_date'],
             'items' => ['required', 'array', 'min:1'],

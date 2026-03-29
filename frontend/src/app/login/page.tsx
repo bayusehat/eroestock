@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { t } from "@/lib/translations";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,7 +29,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
-  const { login, user } = useAuth();
+  const { login, user, loading } = useAuth();
   const router = useRouter();
 
   const {
@@ -40,8 +41,17 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "" },
   });
 
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return null;
+  }
+
   if (user) {
-    router.replace("/dashboard");
     return null;
   }
 
@@ -53,17 +63,23 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message = err && typeof err === "object" && "response" in err
         ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : "Invalid email or password";
-      setError(typeof message === "string" ? message : "Invalid email or password");
+        : t.auth.invalidCredentials;
+      setError(typeof message === "string" ? message : t.auth.invalidCredentials);
     }
   }
 
   return (
     <div className="flex min-h-svh items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+        <CardHeader className="space-y-3 text-center">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">{t.nav.appName}</h1>
+            <p className="text-xs text-muted-foreground">{t.nav.tagline}</p>
+          </div>
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-semibold">{t.auth.loginTitle}</CardTitle>
+            <CardDescription>{t.auth.loginDescription}</CardDescription>
+          </div>
         </CardHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
@@ -73,7 +89,7 @@ export default function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.auth.email}</Label>
               <Input
                 id="email"
                 type="email"
@@ -87,7 +103,7 @@ export default function LoginPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.auth.password}</Label>
               <Input
                 id="password"
                 type="password"
@@ -105,10 +121,10 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  Signing in...
+                  {t.auth.signingIn}
                 </>
               ) : (
-                "Sign in"
+                t.auth.signIn
               )}
             </Button>
           </CardFooter>

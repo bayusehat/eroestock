@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ColumnDef } from "@tanstack/react-table";
 import {
   MoreHorizontal,
@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { toast } from "sonner";
 
 const WO_STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -53,18 +54,19 @@ const WO_STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-500/10 text-red-600 dark:text-red-400",
 };
 
+const WO_TRANSITIONS: Record<string, string[]> = {
+  draft: ["confirmed", "cancelled"],
+  confirmed: ["in_progress", "cancelled"],
+  in_progress: ["completed", "cancelled"],
+  completed: ["invoiced"],
+};
+
 const WO_PRIORITY_COLORS: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
   medium: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
   high: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
   urgent: "bg-red-500/10 text-red-600 dark:text-red-400",
 };
-
-async function fetchWorkOrders(): Promise<WorkOrder[]> {
-  const res = await apiClient.get<{ data: WorkOrder[] }>("/work-orders");
-  const body = res.data as { data: WorkOrder[] };
-  return body.data ?? (body as unknown as WorkOrder[]);
-}
 
 async function fetchClients(): Promise<Client[]> {
   const res = await apiClient.get<{ data: Client[] }>("/clients");
@@ -76,37 +78,37 @@ export default function WorkOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [changeStatusWo, setChangeStatusWo] = useState<WorkOrder | null>(null);
+  const [newStatus, setNewStatus] = useState<string>("");
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const { data: workOrders = [], isLoading } = useQuery({
-    queryKey: ["work-orders"],
-    queryFn: fetchWorkOrders,
+    queryKey: ["work-orders", debouncedSearch, statusFilter, clientFilter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.set("per_page", "100");
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (clientFilter !== "all") params.set("client_id", clientFilter);
+      const res = await apiClient.get<{ data: WorkOrder[] }>(
+        `/work-orders?${params.toString()}`
+      );
+      const body = res.data as { data: WorkOrder[] };
+      return body.data ?? (body as unknown as WorkOrder[]);
+    },
   });
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],
     queryFn: fetchClients,
   });
-
-  const filteredData = useMemo(() => {
-    let result = workOrders;
-    if (statusFilter !== "all") {
-      result = result.filter((wo) => wo.status === statusFilter);
-    }
-    if (clientFilter !== "all") {
-      const clientId = parseInt(clientFilter, 10);
-      result = result.filter((wo) => wo.client_id === clientId);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (wo) =>
-          wo.wo_number?.toLowerCase().includes(q) ||
-          wo.title?.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [workOrders, statusFilter, clientFilter, searchQuery]);
 
   const columns: ColumnDef<WorkOrder>[] = [
     {
@@ -220,10 +222,7 @@ export default function WorkOrdersPage() {
               <span>Duplicate</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                setChangeStatusWo(row.original);
-              }}
+              onClick={() => setChangeStatusWo(row.original)}
             >
               <RefreshCw className="mr-2 size-4" />
               <span>Change Status</span>
@@ -255,8 +254,22 @@ export default function WorkOrdersPage() {
             className="max-w-sm"
           />
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Status">
+                {statusFilter && statusFilter !== "all"
+                  ? (() => {
+                      const labels: Record<string, string> = {
+                        draft: "Draft",
+                        confirmed: "Confirmed",
+                        in_progress: "In Progress",
+                        completed: "Completed",
+                        invoiced: "Invoiced",
+                        cancelled: "Cancelled",
+                      };
+                      return labels[statusFilter] ?? statusFilter.replace("_", " ");
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All status</SelectItem>
@@ -269,8 +282,12 @@ export default function WorkOrdersPage() {
             </SelectContent>
           </Select>
           <Select value={clientFilter} onValueChange={(v) => setClientFilter(v ?? "all")}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Client" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Client">
+                {clientFilter && clientFilter !== "all"
+                  ? clients.find((c) => String(c.id) === clientFilter)?.name ?? null
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All clients</SelectItem>
@@ -284,32 +301,83 @@ export default function WorkOrdersPage() {
         </div>
         <DataTable
           columns={columns}
-          data={filteredData}
+          data={workOrders}
           isLoading={isLoading}
           emptyMessage="No work orders found."
         />
       </div>
       <AlertDialog
         open={!!changeStatusWo}
-        onOpenChange={(open) => !open && setChangeStatusWo(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setChangeStatusWo(null);
+            setNewStatus("");
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Change Status</AlertDialogTitle>
             <AlertDialogDescription>
-              Select a new status for work order {changeStatusWo?.wo_number}.
-              This action will update the work order status.
+              Select a new status for work order{" "}
+              <strong>{changeStatusWo?.wo_number}</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-4">
+            <Select
+              value={newStatus}
+              onValueChange={(v) => setNewStatus(v ?? "")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select new status">
+                  {newStatus ? newStatus.replace("_", " ") : null}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {(WO_TRANSITIONS[changeStatusWo?.status ?? ""] ?? []).map(
+                  (s) => (
+                    <SelectItem key={s} value={s}>
+                      <Badge
+                        variant="outline"
+                        className={WO_STATUS_COLORS[s] ?? "bg-muted"}
+                      >
+                        {s.replace("_", " ")}
+                      </Badge>
+                    </SelectItem>
+                  )
+                )}
+              </SelectContent>
+            </Select>
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setChangeStatusWo(null);
+            <AlertDialogCancel disabled={statusUpdating}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              disabled={!newStatus || statusUpdating}
+              onClick={async () => {
+                if (!changeStatusWo || !newStatus) return;
+                setStatusUpdating(true);
+                try {
+                  await apiClient.patch(
+                    `/work-orders/${changeStatusWo.id}/status`,
+                    { status: newStatus }
+                  );
+                  toast.success(
+                    `${changeStatusWo.wo_number} status updated to ${newStatus.replace("_", " ")}`
+                  );
+                  queryClient.invalidateQueries({ queryKey: ["work-orders"] });
+                  setChangeStatusWo(null);
+                  setNewStatus("");
+                } catch {
+                  toast.error("Failed to update status");
+                } finally {
+                  setStatusUpdating(false);
+                }
               }}
             >
-              Confirm
-            </AlertDialogAction>
+              {statusUpdating ? "Updating..." : "Confirm"}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

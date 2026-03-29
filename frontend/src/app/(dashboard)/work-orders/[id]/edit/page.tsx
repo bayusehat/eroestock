@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import type { WorkOrder } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -28,14 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { ClientSelect } from "@/components/client-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { formatCurrency } from "@/lib/format";
@@ -53,7 +46,8 @@ const lineItemSchema = z.object({
 });
 
 const editWorkOrderSchema = z.object({
-  client_id: z.number().min(1, "Client is required"),
+  client_id: z.number().nullable().optional(),
+  client_work_order_id: z.string().optional(),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   category: z.string().optional(),
@@ -104,7 +98,8 @@ export default function EditWorkOrderPage() {
   } = useForm<EditWorkOrderForm>({
     resolver: zodResolver(editWorkOrderSchema),
     defaultValues: {
-      client_id: 0 as unknown as number,
+      client_id: null,
+      client_work_order_id: "",
       title: "",
       description: "",
       category: "",
@@ -132,7 +127,8 @@ export default function EditWorkOrderPage() {
         return;
       }
       reset({
-        client_id: workOrder.client_id,
+        client_id: workOrder.client_id ?? null,
+        client_work_order_id: workOrder.client_work_order_id ?? "",
         title: workOrder.title,
         description: workOrder.description ?? "",
         category: workOrder.category ?? "",
@@ -177,7 +173,8 @@ export default function EditWorkOrderPage() {
   async function onSubmit(data: EditWorkOrderForm) {
     try {
       const payload = {
-        client_id: data.client_id,
+        client_id: data.client_id || undefined,
+        client_work_order_id: data.client_work_order_id || undefined,
         title: data.title,
         description: data.description || undefined,
         category: data.category || undefined,
@@ -229,24 +226,29 @@ export default function EditWorkOrderPage() {
         description={workOrder.wo_number}
       />
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Order Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Client *</Label>
-                  <ClientSelect
-                    value={watch("client_id") || null}
-                    onChange={(id) => setValue("client_id", id ?? 0)}
-                  />
-                  {errors.client_id && (
-                    <p className="text-sm text-destructive">
-                      {errors.client_id.message}
-                    </p>
-                  )}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Client</Label>
+                    <ClientSelect
+                      value={watch("client_id") || null}
+                      onChange={(id) => setValue("client_id", id ?? null)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="client_work_order_id">Client WO ID</Label>
+                    <Input
+                      id="client_work_order_id"
+                      {...register("client_work_order_id")}
+                      placeholder="e.g. PO-2026-001"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="title">Title *</Label>
@@ -276,8 +278,15 @@ export default function EditWorkOrderPage() {
                       value={watch("category") || ""}
                       onValueChange={(v) => setValue("category", v ?? "")}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select category">
+                          {watch("category")
+                            ? (() => {
+                                const c = watch("category");
+                                return c ? c.charAt(0).toUpperCase() + c.slice(1) : null;
+                              })()
+                            : null}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="service">Service</SelectItem>
@@ -293,8 +302,15 @@ export default function EditWorkOrderPage() {
                       value={watch("priority") || "medium"}
                       onValueChange={(v) => setValue("priority", v ?? "")}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select priority" />
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select priority">
+                          {watch("priority")
+                            ? (() => {
+                                const p = watch("priority");
+                                return p ? p.charAt(0).toUpperCase() + p.slice(1) : null;
+                              })()
+                            : null}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
@@ -336,101 +352,108 @@ export default function EditWorkOrderPage() {
               <CardHeader>
                 <CardTitle>Line Items</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="w-20">Qty</TableHead>
-                        <TableHead className="w-20">Unit</TableHead>
-                        <TableHead className="w-20">Unit Price</TableHead>
-                        <TableHead className="w-20">Discount</TableHead>
-                        <TableHead className="w-20">Tax %</TableHead>
-                        <TableHead className="w-24 text-right">Subtotal</TableHead>
-                        <TableHead className="w-10" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {fields.map((field, i) => (
-                        <TableRow key={field.id}>
-                          <TableCell>
-                            <Input
-                              {...register(`items.${i}.description`)}
-                              className="h-8"
-                              placeholder="Description"
+              <CardContent className="space-y-4">
+                {fields.map((field, i) => (
+                  <div
+                    key={field.id}
+                    className="rounded-lg border p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Item {i + 1}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(i)}
+                        disabled={fields.length === 1}
+                        className="h-7 px-2 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3.5 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Description</Label>
+                      <Input
+                        {...register(`items.${i}.description`)}
+                        placeholder="Item description"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Qty</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...register(`items.${i}.quantity`, { valueAsNumber: true })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Unit</Label>
+                        <Input
+                          {...register(`items.${i}.unit`)}
+                          placeholder="pcs"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Unit Price</Label>
+                        <Controller
+                          name={`items.${i}.unit_price`}
+                          control={control}
+                          render={({ field }) => (
+                            <CurrencyInput
+                              value={field.value}
+                              onChange={field.onChange}
                             />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.quantity`)}
-                              className="h-8"
+                          )}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Discount</Label>
+                        <Controller
+                          name={`items.${i}.discount`}
+                          control={control}
+                          render={({ field }) => (
+                            <CurrencyInput
+                              value={field.value}
+                              onChange={field.onChange}
                             />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              {...register(`items.${i}.unit`)}
-                              className="h-8"
-                              placeholder="pcs"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.unit_price`)}
-                              className="h-8"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.discount`)}
-                              className="h-8"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              {...register(`items.${i}.tax_rate`)}
-                              className="h-8"
-                            />
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {formatCurrency(
-                              calcSubtotal(
-                                items?.[i]?.quantity ?? 0,
-                                items?.[i]?.unit_price ?? 0,
-                                items?.[i]?.discount ?? 0,
-                                items?.[i]?.tax_rate ?? 0
-                              )
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => remove(i)}
-                              disabled={fields.length === 1}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Tax %</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          {...register(`items.${i}.tax_rate`, { valueAsNumber: true })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs">Subtotal</Label>
+                        <div className="flex h-9 items-center rounded-md border bg-muted/50 px-3 text-sm font-medium">
+                          {formatCurrency(
+                            calcSubtotal(
+                              items?.[i]?.quantity ?? 0,
+                              items?.[i]?.unit_price ?? 0,
+                              items?.[i]?.discount ?? 0,
+                              items?.[i]?.tax_rate ?? 0
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="mt-4"
+                  className="w-full"
                   onClick={() =>
                     append({
                       description: "",

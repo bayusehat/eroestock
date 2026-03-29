@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { fetchFlattenedAccounts } from "@/lib/accounts";
 import type { Account, GeneralLedgerReport } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,12 +29,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { t } from "@/lib/translations";
 
-async function fetchAccounts(): Promise<Account[]> {
-  const res = await apiClient.get<{ data: Account[] }>("/accounts");
-  const body = res.data as { data: Account[] };
-  return body.data ?? (body as unknown as Account[]);
-}
 
 async function fetchGeneralLedger(
   accountId: number,
@@ -57,12 +55,18 @@ function getDefaultDateRange() {
 }
 
 export default function GeneralLedgerPage() {
+  const searchParams = useSearchParams();
   const [accountId, setAccountId] = useState<string>("");
   const [range, setRange] = useState(getDefaultDateRange());
 
+  useEffect(() => {
+    const id = searchParams.get("account_id");
+    if (id) setAccountId(id);
+  }, [searchParams]);
+
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
-    queryFn: fetchAccounts,
+    queryFn: fetchFlattenedAccounts,
   });
 
   const leafAccounts = accounts.filter((a) => !a.is_header);
@@ -77,21 +81,30 @@ export default function GeneralLedgerPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="General Ledger"
-        description="Transaction history for an account"
+        title={t.reports.generalLedger.title}
+        description={t.reports.generalLedger.description}
         children={
           <Link href="/reports" className={buttonVariants({ variant: "outline" })}>
             <ArrowLeft className="mr-2 size-4" />
-            Back
+            {t.common.back}
           </Link>
         }
       />
-      <div className="flex flex-wrap items-end gap-4">
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">Account</label>
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="space-y-2 min-w-[200px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.reports.generalLedger.account}
+          </label>
           <Select value={accountId} onValueChange={(v) => setAccountId(v ?? "")}>
-            <SelectTrigger className="w-[240px]">
-              <SelectValue placeholder="Select account" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t.reports.generalLedger.selectAccount}>
+                {accountId
+                  ? (() => {
+                      const a = leafAccounts.find((acc) => String(acc.id) === accountId);
+                      return a ? `${a.code} - ${a.name}` : null;
+                    })()
+                  : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {leafAccounts.map((a) => (
@@ -102,29 +115,33 @@ export default function GeneralLedgerPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">From</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.from}
+          </label>
           <DatePicker
             value={range.from}
             onChange={(v) => setRange((r) => ({ ...r, from: v }))}
-            placeholder="From date"
-            className="w-[160px]"
+            placeholder={t.placeholders.fromDate}
+            className="w-full"
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">To</label>
+        <div className="space-y-2 min-w-[160px]">
+          <label className="block text-sm font-medium text-muted-foreground">
+            {t.common.to}
+          </label>
           <DatePicker
             value={range.to}
             onChange={(v) => setRange((r) => ({ ...r, to: v }))}
-            placeholder="To date"
-            className="w-[160px]"
+            placeholder={t.placeholders.toDate}
+            className="w-full"
           />
         </div>
       </div>
       {!accountId && (
         <Card>
           <CardContent className="flex h-32 items-center justify-center text-muted-foreground">
-            Select an account to view the general ledger
+            {t.reports.generalLedger.selectAccountHint}
           </CardContent>
         </Card>
       )}
@@ -142,11 +159,11 @@ export default function GeneralLedgerPage() {
             <CardContent className="space-y-4">
               <div className="flex gap-8">
                 <div>
-                  <p className="text-sm text-muted-foreground">Opening Balance</p>
+                  <p className="text-sm text-muted-foreground">{t.reports.generalLedger.openingBalance}</p>
                   <p className="font-semibold">{formatCurrency(data.opening_balance ?? 0)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Closing Balance</p>
+                  <p className="text-sm text-muted-foreground">{t.reports.generalLedger.closingBalance}</p>
                   <p className="font-semibold">{formatCurrency(data.closing_balance ?? 0)}</p>
                 </div>
               </div>
@@ -154,18 +171,18 @@ export default function GeneralLedgerPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Entries</CardTitle>
+              <CardTitle>{t.reports.generalLedger.entries}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Reference</TableHead>
-                    <TableHead className="text-right">Debit</TableHead>
-                    <TableHead className="text-right">Credit</TableHead>
-                    <TableHead className="text-right">Running Balance</TableHead>
+                    <TableHead>{t.table.date}</TableHead>
+                    <TableHead>{t.common.description}</TableHead>
+                    <TableHead>{t.reports.generalLedger.reference}</TableHead>
+                    <TableHead className="text-right">{t.table.debit}</TableHead>
+                    <TableHead className="text-right">{t.table.credit}</TableHead>
+                    <TableHead className="text-right">{t.reports.generalLedger.runningBalance}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,7 +205,7 @@ export default function GeneralLedgerPage() {
                   {(!data.entries || data.entries.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        No entries for this period
+                        {t.reports.generalLedger.noEntries}
                       </TableCell>
                     </TableRow>
                   )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import type { Employee } from "@/types";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -191,8 +192,12 @@ export default function CreatePayrollPage() {
                     if (emp) setValue("base_salary", emp.base_salary ?? 0);
                   }}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select employee" />
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select employee">
+                      {watch("employee_id")
+                        ? employees.find((e) => e.id === watch("employee_id"))?.name ?? null
+                        : null}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {employees.map((e) => (
@@ -215,8 +220,14 @@ export default function CreatePayrollPage() {
                     value={String(formValues.period_month)}
                     onValueChange={(v) => setValue("period_month", parseInt(v ?? "1", 10))}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
+                    <SelectTrigger className="w-full">
+                      <SelectValue>
+                        {formValues.period_month
+                          ? new Date(2000, formValues.period_month - 1).toLocaleString("default", {
+                              month: "long",
+                            })
+                          : null}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -239,10 +250,15 @@ export default function CreatePayrollPage() {
               </div>
               <div className="space-y-2">
                 <Label>Base Salary *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  {...register("base_salary", { valueAsNumber: true })}
+                <Controller
+                  name="base_salary"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
                 {errors.base_salary && (
                   <p className="text-sm text-destructive">
@@ -268,10 +284,15 @@ export default function CreatePayrollPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Rate</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...register("overtime_rate", { valueAsNumber: true })}
+                  <Controller
+                    name="overtime_rate"
+                    control={control}
+                    render={({ field }) => (
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -294,14 +315,17 @@ export default function CreatePayrollPage() {
                     placeholder="Name"
                     className="flex-1"
                   />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...register(`allowances.${i}.amount`, {
-                      valueAsNumber: true,
-                    })}
-                    placeholder="Amount"
-                    className="w-32"
+                  <Controller
+                    name={`allowances.${i}.amount`}
+                    control={control}
+                    render={({ field }) => (
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Amount"
+                        className="w-32"
+                      />
+                    )}
                   />
                   <Button
                     type="button"
@@ -336,14 +360,17 @@ export default function CreatePayrollPage() {
                     placeholder="Name"
                     className="flex-1"
                   />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...register(`deductions.${i}.amount`, {
-                      valueAsNumber: true,
-                    })}
-                    placeholder="Amount"
-                    className="w-32"
+                  <Controller
+                    name={`deductions.${i}.amount`}
+                    control={control}
+                    render={({ field }) => (
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Amount"
+                        className="w-32"
+                      />
+                    )}
                   />
                   <Button
                     type="button"
@@ -373,10 +400,15 @@ export default function CreatePayrollPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Tax Amount</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  {...register("tax_amount", { valueAsNumber: true })}
+                <Controller
+                  name="tax_amount"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
               <div className="space-y-2 border-t pt-4">
