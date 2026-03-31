@@ -333,18 +333,23 @@ export interface TrialBalanceReport {
   total_credits: number;
 }
 
+export interface GeneralLedgerEntry {
+  date: string;
+  description: string;
+  reference?: string;
+  debit: number;
+  credit: number;
+  running_balance: number;
+  account_code?: string;
+  account_name?: string;
+}
+
 export interface GeneralLedgerReport {
   account: { id: number; code: string; name: string };
   opening_balance: number;
   closing_balance: number;
-  entries: {
-    date: string;
-    description: string;
-    reference?: string;
-    debit: number;
-    credit: number;
-    running_balance: number;
-  }[];
+  entries: GeneralLedgerEntry[];
+  is_aggregate?: boolean;
 }
 
 export interface AgingReport {

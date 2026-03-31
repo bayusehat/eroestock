@@ -82,7 +82,7 @@ class ReportController extends Controller
         }
         $revenueByAccount = array_values($revenueMap);
 
-        $expenseByAccount = Transaction::query()
+        $txnExpenses = Transaction::query()
             ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
             ->where('transactions.type', 'expense')
             ->whereBetween('transactions.date', [$dateFrom, $dateTo])
@@ -97,6 +97,35 @@ class ReportController extends Controller
             ])
             ->values()
             ->toArray();
+
+        $journalExpenses = JournalEntryLine::query()
+            ->join('accounts', 'journal_entry_lines.account_id', '=', 'accounts.id')
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.id')
+            ->where('accounts.type', 'expense')
+            ->where('journal_entry_lines.debit', '>', 0)
+            ->whereBetween('journal_entries.date', [$dateFrom, $dateTo])
+            ->select('accounts.id', 'accounts.code', 'accounts.name', DB::raw('SUM(journal_entry_lines.debit) as total'))
+            ->groupBy('accounts.id', 'accounts.code', 'accounts.name')
+            ->get()
+            ->map(fn ($r) => [
+                'account_id' => $r->id,
+                'account_code' => $r->code,
+                'account_name' => $r->name,
+                'amount' => (float) $r->total,
+            ])
+            ->values()
+            ->toArray();
+
+        $expenseMap = [];
+        foreach (array_merge($txnExpenses, $journalExpenses) as $item) {
+            $key = $item['account_id'];
+            if (!isset($expenseMap[$key])) {
+                $expenseMap[$key] = $item;
+            } else {
+                $expenseMap[$key]['amount'] += $item['amount'];
+            }
+        }
+        $expenseByAccount = array_values($expenseMap);
 
         $totalRevenue = array_sum(array_column($revenueByAccount, 'amount'));
         $totalExpenses = array_sum(array_column($expenseByAccount, 'amount'));
@@ -137,6 +166,11 @@ class ReportController extends Controller
                 ->selectRaw('SUM(CASE WHEN type = "income" THEN amount ELSE -amount END) as balance')
                 ->value('balance') ?? 0;
 
+            $contraBalance = Transaction::where('contra_account_id', $account->id)
+                ->whereDate('date', '<=', $dateTo)
+                ->selectRaw('SUM(CASE WHEN type = "expense" THEN amount ELSE -amount END) as balance')
+                ->value('balance') ?? 0;
+
             $journalDebits = JournalEntryLine::where('account_id', $account->id)
                 ->whereHas('journalEntry', fn ($q) => $q->whereDate('date', '<=', $dateTo))
                 ->sum('debit');
@@ -145,7 +179,11 @@ class ReportController extends Controller
                 ->whereHas('journalEntry', fn ($q) => $q->whereDate('date', '<=', $dateTo))
                 ->sum('credit');
 
-            $balance = (float) $account->opening_balance + (float) $txnBalance + (float) $journalDebits - (float) $journalCredits;
+            $balance = (float) $account->opening_balance
+                + (float) $txnBalance
+                + (float) $contraBalance
+                + (float) $journalDebits
+                - (float) $journalCredits;
 
             if ($account->type === 'liability' || $account->type === 'equity' || $account->type === 'revenue') {
                 $balance = -$balance;
@@ -322,22 +360,22 @@ class ReportController extends Controller
         foreach ($accounts as $account) {
             $txnDebits = Transaction::where('account_id', $account->id)
                 ->whereBetween('date', [$dateFrom, $dateTo])
-                ->where('type', 'expense')
+                ->where('type', 'income')
                 ->sum('amount');
 
             $txnCredits = Transaction::where('account_id', $account->id)
                 ->whereBetween('date', [$dateFrom, $dateTo])
-                ->where('type', 'income')
+                ->where('type', 'expense')
                 ->sum('amount');
 
             $contraDebits = Transaction::where('contra_account_id', $account->id)
                 ->whereBetween('date', [$dateFrom, $dateTo])
-                ->where('type', 'income')
+                ->where('type', 'expense')
                 ->sum('amount');
 
             $contraCredits = Transaction::where('contra_account_id', $account->id)
                 ->whereBetween('date', [$dateFrom, $dateTo])
-                ->where('type', 'expense')
+                ->where('type', 'income')
                 ->sum('amount');
 
             $journalDebits = JournalEntryLine::where('account_id', $account->id)
@@ -391,6 +429,20 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * Recursively collect all descendant account IDs for a given parent.
+     */
+    private function collectDescendantIds(int $parentId): array
+    {
+        $children = Account::where('parent_id', $parentId)->get(['id']);
+        $ids = [];
+        foreach ($children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, $this->collectDescendantIds($child->id));
+        }
+        return $ids;
+    }
+
     public function generalLedger(Request $request): JsonResponse
     {
         $accountId = $request->get('account_id');
@@ -411,29 +463,42 @@ class ReportController extends Controller
 
         [$dateFrom, $dateTo] = $this->dateRange($request);
 
-        $openingBalance = (float) ($account->opening_balance ?? 0);
-        $beforeTxns = Transaction::where('account_id', $accountId)
+        $targetIds = [$account->id];
+        if ($account->is_header) {
+            $targetIds = array_merge($targetIds, $this->collectDescendantIds($account->id));
+        }
+
+        $accountMap = Account::whereIn('id', $targetIds)->get()->keyBy('id');
+
+        $openingBalance = 0.0;
+        foreach ($targetIds as $tid) {
+            $acc = $accountMap[$tid] ?? null;
+            $openingBalance += (float) ($acc?->opening_balance ?? 0);
+        }
+
+        $beforeTxns = Transaction::whereIn('account_id', $targetIds)
             ->whereDate('date', '<', $dateFrom)
             ->selectRaw('SUM(CASE WHEN type = "income" THEN amount ELSE -amount END) as bal')
             ->value('bal');
         $openingBalance += (float) ($beforeTxns ?? 0);
 
-        $beforeContra = Transaction::where('contra_account_id', $accountId)
+        $beforeContra = Transaction::whereIn('contra_account_id', $targetIds)
             ->whereDate('date', '<', $dateFrom)
             ->selectRaw('SUM(CASE WHEN type = "expense" THEN amount ELSE -amount END) as bal')
             ->value('bal');
         $openingBalance += (float) ($beforeContra ?? 0);
 
-        $journalBefore = JournalEntryLine::where('account_id', $accountId)
+        $journalBefore = JournalEntryLine::whereIn('account_id', $targetIds)
             ->whereHas('journalEntry', fn ($q) => $q->whereDate('date', '<', $dateFrom))
             ->selectRaw('SUM(debit) - SUM(credit) as bal')
             ->value('bal');
         $openingBalance += (float) ($journalBefore ?? 0);
 
         $movements = [];
+        $isAggregate = count($targetIds) > 1;
 
-        $txns = Transaction::where(function ($q) use ($accountId) {
-            $q->where('account_id', $accountId)->orWhere('contra_account_id', $accountId);
+        $txns = Transaction::where(function ($q) use ($targetIds) {
+            $q->whereIn('account_id', $targetIds)->orWhereIn('contra_account_id', $targetIds);
         })
             ->whereBetween('date', [$dateFrom, $dateTo])
             ->orderBy('date')
@@ -444,14 +509,17 @@ class ReportController extends Controller
             $debit = 0.0;
             $credit = 0.0;
             $desc = $t->description ?? $t->transaction_no;
+            $matchedId = null;
 
-            if ($t->account_id == $accountId) {
+            if (in_array($t->account_id, $targetIds)) {
+                $matchedId = $t->account_id;
                 if ($t->type === 'income') {
                     $debit = (float) $t->amount;
                 } else {
                     $credit = (float) $t->amount;
                 }
             } else {
+                $matchedId = $t->contra_account_id;
                 if ($t->type === 'expense') {
                     $debit = (float) $t->amount;
                 } else {
@@ -459,28 +527,44 @@ class ReportController extends Controller
                 }
             }
 
-            $movements[] = [
+            $entry = [
                 'date' => $t->date?->format('Y-m-d'),
                 'reference' => $t->transaction_no,
                 'description' => $desc,
                 'debit' => $debit,
                 'credit' => $credit,
             ];
+
+            if ($isAggregate && $matchedId) {
+                $matchedAcc = $accountMap[$matchedId] ?? null;
+                $entry['account_code'] = $matchedAcc?->code;
+                $entry['account_name'] = $matchedAcc?->name;
+            }
+
+            $movements[] = $entry;
         }
 
-        $journalLines = JournalEntryLine::where('account_id', $accountId)
+        $journalLines = JournalEntryLine::whereIn('account_id', $targetIds)
             ->whereHas('journalEntry', fn ($q) => $q->whereBetween('date', [$dateFrom, $dateTo]))
             ->with('journalEntry')
             ->get();
 
         foreach ($journalLines as $line) {
-            $movements[] = [
+            $entry = [
                 'date' => $line->journalEntry?->date?->format('Y-m-d'),
                 'reference' => $line->journalEntry?->journal_no ?? 'JE',
                 'description' => $line->description ?? 'Journal entry',
                 'debit' => (float) $line->debit,
                 'credit' => (float) $line->credit,
             ];
+
+            if ($isAggregate) {
+                $matchedAcc = $accountMap[$line->account_id] ?? null;
+                $entry['account_code'] = $matchedAcc?->code;
+                $entry['account_name'] = $matchedAcc?->name;
+            }
+
+            $movements[] = $entry;
         }
 
         usort($movements, fn ($a, $b) => strcmp($a['date'], $b['date']));
@@ -489,7 +573,7 @@ class ReportController extends Controller
         $entries = [];
         foreach ($movements as $m) {
             $runningBalance += $m['debit'] - $m['credit'];
-            $entries[] = [
+            $entry = [
                 'date' => $m['date'],
                 'description' => $m['description'],
                 'reference' => $m['reference'] ?? null,
@@ -497,6 +581,11 @@ class ReportController extends Controller
                 'credit' => $m['credit'],
                 'running_balance' => (float) round($runningBalance, 2),
             ];
+            if ($isAggregate) {
+                $entry['account_code'] = $m['account_code'] ?? null;
+                $entry['account_name'] = $m['account_name'] ?? null;
+            }
+            $entries[] = $entry;
         }
 
         $data = [
@@ -510,6 +599,7 @@ class ReportController extends Controller
             'opening_balance' => (float) round($openingBalance, 2),
             'entries' => $entries,
             'closing_balance' => (float) round($runningBalance, 2),
+            'is_aggregate' => $isAggregate,
         ];
 
         return response()->json([

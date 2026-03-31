@@ -63,6 +63,7 @@ Route::prefix('v1')->group(function () {
             Route::post('invoices/from-work-order/{work_order}', [InvoiceController::class, 'createFromWorkOrder']);
             Route::post('invoices/{invoice}/payment', [InvoiceController::class, 'recordPayment']);
             Route::patch('invoices/{invoice}/send', [InvoiceController::class, 'markAsSent']);
+            Route::patch('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel']);
         });
 
         Route::middleware('role_or_permission:employees-view|employees-create|employees-edit|employees-delete')->group(function () {

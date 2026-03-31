@@ -34,6 +34,7 @@ const routeLabels: Record<string, string> = {
   transactions: "Transactions",
   "journal-entries": "Journal Entries",
   accounts: "Chart of Accounts",
+  tutorial: "Tutorial",
   employees: "Employees",
   payroll: "Payroll",
   reports: "Reports",
@@ -43,6 +44,7 @@ const routeLabels: Record<string, string> = {
   "audit-logs": "Audit Logs",
   create: "Create",
   edit: "Edit",
+  detail: "Detail",
 };
 
 function getBreadcrumbs(pathname: string) {

@@ -27,6 +27,7 @@ export const t = {
     employees: "Employees",
     payroll: "Payroll",
     auditLogs: "Audit Logs",
+    tutorial: "Tutorial",
     profile: "Profil",
     logOut: "Keluar",
     appName: "Kucatat",
@@ -233,6 +234,21 @@ export const t = {
     signingIn: "Sedang masuk...",
     signIn: "Masuk",
     invalidCredentials: "Email atau kata sandi salah",
+  },
+
+  // Accounts
+  accounts: {
+    detailDescription: "Detail akun dan riwayat ledger",
+    type: "Tipe Akun",
+    normalBalance: "Saldo Normal",
+    openingBalance: "Saldo Awal",
+    currentBalance: "Saldo Saat Ini",
+    ledgerEntries: "Entri Ledger",
+    totalDebit: "Total Debit",
+    totalCredit: "Total Kredit",
+    viewFullLedger: "General Ledger",
+    notFound: "Akun tidak ditemukan",
+    viewDetail: "Lihat Detail",
   },
 
   // Table headers

@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Plus,
   Pencil,
+  Eye,
   MoreHorizontal,
 } from "lucide-react";
 import { fetchFlattenedAccounts } from "@/lib/accounts";
@@ -99,7 +100,14 @@ function AccountRow({
             <span className="font-mono text-sm">{account.code}</span>
           </div>
         </td>
-        <td className="p-2">{account.name}</td>
+        <td className="p-2">
+          <Link
+            href={`/accounts/${account.id}`}
+            className="hover:underline hover:text-primary"
+          >
+            {account.name}
+          </Link>
+        </td>
         <td className="p-2">
           <Badge variant="outline">{account.type}</Badge>
         </td>
@@ -117,6 +125,14 @@ function AccountRow({
               }
             />
             <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                render={
+                  <Link href={`/accounts/${account.id}`}>
+                    <Eye className="mr-2 size-4" />
+                    View Detail
+                  </Link>
+                }
+              />
               <DropdownMenuItem
                 render={
                   <Link href={`/accounts/${account.id}/edit`}>

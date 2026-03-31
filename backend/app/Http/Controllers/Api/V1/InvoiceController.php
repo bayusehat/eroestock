@@ -278,17 +278,25 @@ class InvoiceController extends Controller
         if (!$receivableAccount) {
             return response()->json([
                 'success' => false,
-                'message' => 'Accounts Receivable account not found',
+                'message' => 'Accounts Receivable account (1-2000) not found. Please set up chart of accounts.',
             ], 500);
         }
 
-        $result = DB::transaction(function () use ($request, $invoice, $amount, $receivableAccount) {
+        $bankAccount = Account::find($request->account_id);
+        if (!$bankAccount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment account not found',
+            ], 422);
+        }
+
+        $result = DB::transaction(function () use ($request, $invoice, $amount, $receivableAccount, $bankAccount) {
             Transaction::create([
                 'transaction_no' => GeneratesNumber::generateNumber('TXN', 'transactions', 'transaction_no', 'Y'),
                 'type' => 'income',
                 'date' => $request->payment_date,
                 'amount' => $amount,
-                'account_id' => $request->account_id,
+                'account_id' => $bankAccount->id,
                 'contra_account_id' => $receivableAccount->id,
                 'client_id' => $invoice->client_id,
                 'invoice_id' => $invoice->id,
@@ -331,28 +339,39 @@ class InvoiceController extends Controller
             ], 422);
         }
 
-        $result = DB::transaction(function () use ($invoice) {
+        $arAccount = Account::where('code', '1-2000')->first();
+        $revenueAccount = Account::where('code', '4-1000')->first();
+
+        if (!$arAccount || !$revenueAccount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Required accounts not found (A/R: 1-2000, Revenue: 4-1000). Please set up chart of accounts.',
+            ], 500);
+        }
+
+        $taxPayableAccount = Account::where('code', '2-2000')->first();
+
+        $result = DB::transaction(function () use ($invoice, $arAccount, $revenueAccount, $taxPayableAccount) {
             $invoice->update(['status' => 'sent']);
 
-            $arAccount = Account::where('code', '1-2000')->first();
-            $revenueAccount = Account::where('code', '4-1000')->first();
-
-            if ($arAccount && $revenueAccount && (float) $invoice->grand_total > 0) {
+            if ((float) $invoice->grand_total > 0) {
                 $journalNo = GeneratesNumber::generateNumber('JE', 'journal_entries', 'journal_no', 'Y');
-                $amount = (string) $invoice->grand_total;
-                $desc = "Invoice {$invoice->invoice_no} - Revenue recognition";
+                $grandTotal = (string) $invoice->grand_total;
+                $taxAmount = (string) $invoice->tax_amount;
+                $revenueAmount = bcsub($grandTotal, $taxAmount, 2);
 
                 $journalEntry = JournalEntry::create([
                     'journal_no' => $journalNo,
                     'date' => $invoice->issue_date,
-                    'description' => $desc,
+                    'description' => "Invoice {$invoice->invoice_no} - Revenue recognition",
+                    'invoice_id' => $invoice->id,
                     'created_by' => auth()->id() ?? $invoice->created_by ?? 1,
                 ]);
 
                 JournalEntryLine::create([
                     'journal_entry_id' => $journalEntry->id,
                     'account_id' => $arAccount->id,
-                    'debit' => $amount,
+                    'debit' => $grandTotal,
                     'credit' => 0,
                     'description' => "A/R - {$invoice->invoice_no}",
                 ]);
@@ -361,9 +380,19 @@ class InvoiceController extends Controller
                     'journal_entry_id' => $journalEntry->id,
                     'account_id' => $revenueAccount->id,
                     'debit' => 0,
-                    'credit' => $amount,
+                    'credit' => $revenueAmount,
                     'description' => "Revenue - {$invoice->invoice_no}",
                 ]);
+
+                if ($taxPayableAccount && bccomp($taxAmount, '0', 2) > 0) {
+                    JournalEntryLine::create([
+                        'journal_entry_id' => $journalEntry->id,
+                        'account_id' => $taxPayableAccount->id,
+                        'debit' => 0,
+                        'credit' => $taxAmount,
+                        'description' => "Tax payable - {$invoice->invoice_no}",
+                    ]);
+                }
             }
 
             return $invoice->fresh(['client', 'items', 'workOrder']);
@@ -372,6 +401,69 @@ class InvoiceController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Invoice marked as sent successfully',
+            'data' => new InvoiceResource($result),
+        ]);
+    }
+
+    public function cancel(Invoice $invoice): JsonResponse
+    {
+        if ($invoice->status === 'cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice is already cancelled',
+            ], 422);
+        }
+
+        if (in_array($invoice->status, ['partially_paid', 'paid'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot cancel an invoice with recorded payments. Reverse payments first.',
+            ], 422);
+        }
+
+        $result = DB::transaction(function () use ($invoice) {
+            if ($invoice->status === 'sent') {
+                $originalJE = JournalEntry::where('invoice_id', $invoice->id)
+                    ->where('description', 'like', '%Revenue recognition%')
+                    ->first();
+
+                if ($originalJE) {
+                    $journalNo = GeneratesNumber::generateNumber('JE', 'journal_entries', 'journal_no', 'Y');
+                    $reversalJE = JournalEntry::create([
+                        'journal_no' => $journalNo,
+                        'date' => now()->format('Y-m-d'),
+                        'description' => "Invoice {$invoice->invoice_no} - Reversal (cancellation)",
+                        'invoice_id' => $invoice->id,
+                        'created_by' => auth()->id() ?? $invoice->created_by ?? 1,
+                    ]);
+
+                    foreach ($originalJE->lines as $line) {
+                        JournalEntryLine::create([
+                            'journal_entry_id' => $reversalJE->id,
+                            'account_id' => $line->account_id,
+                            'debit' => $line->credit,
+                            'credit' => $line->debit,
+                            'description' => "Reversal: {$line->description}",
+                        ]);
+                    }
+                }
+            }
+
+            $invoice->update(['status' => 'cancelled']);
+
+            if ($invoice->work_order_id) {
+                $workOrder = WorkOrder::find($invoice->work_order_id);
+                if ($workOrder && $workOrder->status === 'invoiced') {
+                    $workOrder->update(['status' => 'completed']);
+                }
+            }
+
+            return $invoice->fresh(['client', 'items', 'workOrder']);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Invoice cancelled successfully',
             'data' => new InvoiceResource($result),
         ]);
     }

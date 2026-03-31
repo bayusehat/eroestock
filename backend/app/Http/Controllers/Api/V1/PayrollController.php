@@ -9,15 +9,18 @@ use App\Http\Requests\Api\V1\UpdatePayrollRequest;
 use App\Http\Resources\V1\PayrollRecordResource;
 use App\Models\Account;
 use App\Models\Employee;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryLine;
 use App\Models\PayrollRecord;
 use App\Models\Transaction;
 use App\Traits\GeneratesNumber;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PayrollController extends Controller
 {
-    public function index(\Illuminate\Http\Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $query = PayrollRecord::query()->with('employee:id,employee_id,name');
 
@@ -240,7 +243,62 @@ class PayrollController extends Controller
             ], 422);
         }
 
-        $payroll_record->update(['status' => 'approved']);
+        $salaryAccount = Account::where('code', '5-1000')->first();
+        $salaryPayableAccount = Account::where('code', '2-3000')->first();
+
+        if (!$salaryAccount || !$salaryPayableAccount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Required accounts not found (Salary & Wages: 5-1000, Salary Payable: 2-3000). Please set up chart of accounts.',
+            ], 500);
+        }
+
+        $taxPayableAccount = Account::where('code', '2-2000')->first();
+
+        DB::transaction(function () use ($payroll_record, $salaryAccount, $salaryPayableAccount, $taxPayableAccount) {
+            $payroll_record->update(['status' => 'approved']);
+
+            $grossPay = (string) $payroll_record->gross_pay;
+            $taxAmount = (string) $payroll_record->tax_amount;
+            $salaryPayableAmount = bcsub($grossPay, $taxAmount, 2);
+
+            $periodLabel = sprintf('%04d-%02d', $payroll_record->period_year, $payroll_record->period_month);
+            $employeeName = $payroll_record->employee->name ?? 'Unknown';
+
+            $journalNo = GeneratesNumber::generateNumber('JE', 'journal_entries', 'journal_no', 'Y');
+            $journalEntry = JournalEntry::create([
+                'journal_no' => $journalNo,
+                'date' => now()->format('Y-m-d'),
+                'description' => "Payroll {$payroll_record->payroll_no} - {$employeeName} ({$periodLabel})",
+                'created_by' => auth()->id() ?? $payroll_record->created_by ?? 1,
+            ]);
+
+            JournalEntryLine::create([
+                'journal_entry_id' => $journalEntry->id,
+                'account_id' => $salaryAccount->id,
+                'debit' => $grossPay,
+                'credit' => 0,
+                'description' => "Salary expense - {$payroll_record->payroll_no}",
+            ]);
+
+            if ($taxPayableAccount && bccomp($taxAmount, '0', 2) > 0) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $journalEntry->id,
+                    'account_id' => $taxPayableAccount->id,
+                    'debit' => 0,
+                    'credit' => $taxAmount,
+                    'description' => "Tax withheld - {$payroll_record->payroll_no}",
+                ]);
+            }
+
+            JournalEntryLine::create([
+                'journal_entry_id' => $journalEntry->id,
+                'account_id' => $salaryPayableAccount->id,
+                'debit' => 0,
+                'credit' => $salaryPayableAmount,
+                'description' => "Salary payable - {$payroll_record->payroll_no}",
+            ]);
+        });
 
         return response()->json([
             'success' => true,
@@ -249,7 +307,7 @@ class PayrollController extends Controller
         ]);
     }
 
-    public function markAsPaid(PayrollRecord $payroll_record): JsonResponse
+    public function markAsPaid(Request $request, PayrollRecord $payroll_record): JsonResponse
     {
         if ($payroll_record->status !== 'approved') {
             return response()->json([
@@ -258,33 +316,45 @@ class PayrollController extends Controller
             ], 422);
         }
 
-        $salaryAccount = Account::where('code', '5-1000')->first();
-        $cashAccount = Account::where('code', '1-1002')->first();
+        $salaryPayableAccount = Account::where('code', '2-3000')->first();
+        $bankAccount = $request->filled('account_id')
+            ? Account::find($request->account_id)
+            : Account::where('code', '1-1002')->first();
 
-        if (!$salaryAccount || !$cashAccount) {
+        if (!$salaryPayableAccount) {
             return response()->json([
                 'success' => false,
-                'message' => 'Required accounts (Salary & Wages, Cash/Bank) not found',
+                'message' => 'Salary Payable account (2-3000) not found. Please set up chart of accounts.',
             ], 500);
         }
 
-        DB::transaction(function () use ($payroll_record, $salaryAccount, $cashAccount) {
+        if (!$bankAccount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment account not found.',
+            ], 422);
+        }
+
+        $paymentMethod = $request->input('payment_method', 'bank_transfer');
+
+        DB::transaction(function () use ($payroll_record, $salaryPayableAccount, $bankAccount, $paymentMethod) {
             Transaction::create([
                 'transaction_no' => GeneratesNumber::generateNumber('TXN', 'transactions', 'transaction_no', 'Y'),
                 'type' => 'expense',
                 'date' => now(),
                 'amount' => $payroll_record->net_pay,
-                'account_id' => $salaryAccount->id,
-                'contra_account_id' => $cashAccount->id,
+                'account_id' => $bankAccount->id,
+                'contra_account_id' => $salaryPayableAccount->id,
                 'category' => 'Salary & Wages',
                 'description' => $payroll_record->payroll_no . ' - ' . $payroll_record->employee->name,
-                'payment_method' => 'bank_transfer',
-                'created_by' => request()->user()->id,
+                'payment_method' => $paymentMethod,
+                'created_by' => $payroll_record->created_by,
             ]);
 
             $payroll_record->update([
                 'status' => 'paid',
                 'paid_date' => now(),
+                'payment_method' => $paymentMethod,
             ]);
         });
 

@@ -1,16 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Bar,
-  BarChart,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   TrendingUp,
   TrendingDown,
@@ -36,8 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { t } from "@/lib/translations";
-
-const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+import { getChartColors, commonBarOptions, commonPieOptions } from "@/lib/chartjs";
 
 async function fetchDashboard(): Promise<DashboardData> {
   const res = await apiClient.get<{ data: DashboardData }>("/dashboard");
@@ -51,6 +42,8 @@ export default function DashboardPage() {
     queryKey: ["dashboard"],
     queryFn: fetchDashboard,
   });
+
+  const colors = useMemo(() => getChartColors(5), []);
 
   if (isLoading) {
     return (
@@ -76,7 +69,7 @@ export default function DashboardPage() {
       }))
     : [];
 
-  const barData = data?.recent_transactions?.slice(0, 12).map((t, i) => ({
+  const barEntries = data?.recent_transactions?.slice(0, 12).map((t, i) => ({
     month: `T${i + 1}`,
     revenue: t.amount > 0 ? t.amount : 0,
     expense: t.amount < 0 ? Math.abs(t.amount) : 0,
@@ -85,6 +78,32 @@ export default function DashboardPage() {
     revenue: 0,
     expense: 0,
   }));
+
+  const barChartData = {
+    labels: barEntries.map((d) => d.month),
+    datasets: [
+      {
+        label: t.reports.profitLoss.revenueLabel,
+        data: barEntries.map((d) => d.revenue),
+        backgroundColor: colors[0],
+      },
+      {
+        label: t.reports.profitLoss.expensesLabel,
+        data: barEntries.map((d) => d.expense),
+        backgroundColor: colors[1],
+      },
+    ],
+  };
+
+  const pieChartData = {
+    labels: revenueData.map((d) => d.name),
+    datasets: [
+      {
+        data: revenueData.map((d) => d.value),
+        backgroundColor: revenueData.map((_, i) => colors[i % colors.length]),
+      },
+    ],
+  };
 
   return (
     <div className="space-y-6">
@@ -149,14 +168,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData}>
-                  <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(v) => `${v / 1000}k`} />
-                  <Bar dataKey="revenue" fill={CHART_COLORS[0]} name={t.reports.profitLoss.revenueLabel} />
-                  <Bar dataKey="expense" fill={CHART_COLORS[1]} name={t.reports.profitLoss.expensesLabel} />
-                </BarChart>
-              </ResponsiveContainer>
+              <Bar data={barChartData} options={commonBarOptions} />
             </div>
           </CardContent>
         </Card>
@@ -167,23 +179,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-64">
               {revenueData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={revenueData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                    >
-                      {revenueData.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+                <Pie data={pieChartData} options={commonPieOptions} />
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
                   {t.dashboard.noWorkOrderData}

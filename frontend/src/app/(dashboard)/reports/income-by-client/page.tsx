@@ -1,16 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Pie,
-  PieChart,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { Doughnut } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
 import { ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { IncomeByClientReport } from "@/types";
@@ -29,14 +23,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { t } from "@/lib/translations";
-
-const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
+import { getChartColors } from "@/lib/chartjs";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -61,6 +48,7 @@ async function fetchIncomeByClient(
 
 export default function IncomeByClientPage() {
   const [range, setRange] = useState(getDefaultDateRange());
+  const colors = useMemo(() => getChartColors(5), []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", "income-by-client", range.from, range.to],
@@ -83,11 +71,34 @@ export default function IncomeByClientPage() {
 
   const report = data ?? { rows: [] };
   const sortedRows = [...(report.rows ?? [])].sort((a, b) => b.amount - a.amount);
-  const chartData = sortedRows.map((r, i) => ({
-    name: r.client_name,
-    value: r.amount,
-    fill: CHART_COLORS[i % CHART_COLORS.length],
-  }));
+
+  const doughnutData = {
+    labels: sortedRows.map((r) => r.client_name),
+    datasets: [
+      {
+        data: sortedRows.map((r) => r.amount),
+        backgroundColor: sortedRows.map((_, i) => colors[i % colors.length]),
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const doughnutOptions: ChartOptions<"doughnut"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "bottom" },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0);
+            const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : "0";
+            return `${ctx.label}: ${formatCurrency(ctx.parsed)} (${pct}%)`;
+          },
+        },
+      },
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -168,36 +179,8 @@ export default function IncomeByClientPage() {
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      label={({ name, percent }) =>
-                        `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                      }
-                    >
-                      {chartData.map((_, i) => (
-                        <Cell key={i} fill={chartData[i].fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v) => formatCurrency(Number(v ?? 0))}
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              {sortedRows.length > 0 ? (
+                <Doughnut data={doughnutData} options={doughnutOptions} />
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
                   {t.reports.profitLoss.noChartData}

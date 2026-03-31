@@ -1,18 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { Bar } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { ProfitLossReport } from "@/types";
@@ -35,8 +27,7 @@ import { downloadPdf } from "@/lib/download";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { t } from "@/lib/translations";
-
-const CHART_COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))"];
+import { getChartColors } from "@/lib/chartjs";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -58,6 +49,7 @@ async function fetchProfitLoss(dateFrom: string, dateTo: string): Promise<Profit
 
 export default function ProfitLossPage() {
   const [range, setRange] = useState(getDefaultDateRange());
+  const colors = useMemo(() => getChartColors(2), []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", "profit-loss", range.from, range.to],
@@ -101,13 +93,46 @@ export default function ProfitLossPage() {
     chart_data: [],
   };
 
-  const chartData =
+  const chartEntries =
     report.chart_data && report.chart_data.length > 0
       ? report.chart_data
       : [
           { month: t.reports.profitLoss.revenueLabel, revenue: report.total_revenue, expenses: 0 },
           { month: t.reports.profitLoss.expensesLabel, revenue: 0, expenses: report.total_expenses },
         ];
+
+  const barChartData = {
+    labels: chartEntries.map((d) => d.month),
+    datasets: [
+      {
+        label: t.reports.profitLoss.revenueLabel,
+        data: chartEntries.map((d) => d.revenue),
+        backgroundColor: colors[0],
+      },
+      {
+        label: t.reports.profitLoss.expensesLabel,
+        data: chartEntries.map((d) => d.expenses),
+        backgroundColor: colors[1],
+      },
+    ],
+  };
+
+  const barOptions: ChartOptions<"bar"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "bottom" },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y ?? 0)}`,
+        },
+      },
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { ticks: { callback: (v) => `${Number(v) / 1000}k` } },
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -250,20 +275,7 @@ export default function ProfitLossPage() {
         <CardContent>
           <div className="h-64">
             {(report.revenue?.length ?? 0) > 0 || (report.expenses?.length ?? 0) > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(v) => `${v / 1000}k`} />
-                  <Tooltip
-                    formatter={(v) => formatCurrency(Number(v ?? 0))}
-                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
-                  />
-                  <Legend />
-                  <Bar dataKey="revenue" fill={CHART_COLORS[0]} name={t.reports.profitLoss.revenueLabel} />
-                  <Bar dataKey="expenses" fill={CHART_COLORS[1]} name={t.reports.profitLoss.expensesLabel} />
-                </BarChart>
-              </ResponsiveContainer>
+              <Bar data={barChartData} options={barOptions} />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 {t.reports.profitLoss.noChartData}

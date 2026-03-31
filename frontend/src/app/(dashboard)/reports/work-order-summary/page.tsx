@@ -1,16 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Pie,
-  PieChart,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { Doughnut } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
 import { ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { WorkOrderSummaryReport } from "@/types";
@@ -25,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -38,14 +32,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { Briefcase, DollarSign, BarChart3 } from "lucide-react";
 import { t } from "@/lib/translations";
-
-const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
+import { getChartColors } from "@/lib/chartjs";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -80,6 +67,7 @@ async function fetchClients(): Promise<{ id: number; name: string }[]> {
 export default function WorkOrderSummaryPage() {
   const [range, setRange] = useState(getDefaultDateRange());
   const [clientId, setClientId] = useState<string>("all");
+  const colors = useMemo(() => getChartColors(5), []);
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],
@@ -120,11 +108,35 @@ export default function WorkOrderSummaryPage() {
   };
   const totalCount = report.total_count ?? report.total_work_orders ?? 0;
 
-  const chartData = (report.by_status ?? []).map((s, i) => ({
-    name: s.status,
-    value: s.total_value,
-    fill: CHART_COLORS[i % CHART_COLORS.length],
-  }));
+  const statusData = report.by_status ?? [];
+
+  const doughnutData = {
+    labels: statusData.map((s) => s.status),
+    datasets: [
+      {
+        data: statusData.map((s) => s.total_value),
+        backgroundColor: statusData.map((_, i) => colors[i % colors.length]),
+        borderWidth: 2,
+      },
+    ],
+  };
+
+  const doughnutOptions: ChartOptions<"doughnut"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "bottom" },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0);
+            const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : "0";
+            return `${ctx.label}: ${formatCurrency(ctx.parsed)} (${pct}%)`;
+          },
+        },
+      },
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -216,7 +228,7 @@ export default function WorkOrderSummaryPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(report.by_status ?? []).map((s) => (
+                {statusData.map((s) => (
                   <TableRow key={s.status}>
                     <TableCell>{s.status}</TableCell>
                     <TableCell className="text-right">{s.count}</TableCell>
@@ -225,7 +237,7 @@ export default function WorkOrderSummaryPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {(!report.by_status || report.by_status.length === 0) && (
+                {statusData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground">
                       {t.reports.workOrderSummary.noData}
@@ -242,36 +254,8 @@ export default function WorkOrderSummaryPage() {
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      label={({ name, percent }) =>
-                        `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                      }
-                    >
-                      {chartData.map((_, i) => (
-                        <Cell key={i} fill={chartData[i].fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v) => formatCurrency(Number(v ?? 0))}
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              {statusData.length > 0 ? (
+                <Doughnut data={doughnutData} options={doughnutOptions} />
               ) : (
                 <div className="flex h-full items-center justify-center text-muted-foreground">
                   {t.reports.profitLoss.noChartData}

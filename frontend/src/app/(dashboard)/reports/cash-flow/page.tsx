@@ -1,17 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import { Line } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { CashFlowReport } from "@/types";
@@ -26,6 +19,7 @@ import { downloadPdf } from "@/lib/download";
 import { toast } from "sonner";
 import { Wallet, ArrowUpDown, PiggyBank } from "lucide-react";
 import { t } from "@/lib/translations";
+import { getChartColors } from "@/lib/chartjs";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -47,6 +41,7 @@ async function fetchCashFlow(dateFrom: string, dateTo: string): Promise<CashFlow
 
 export default function CashFlowPage() {
   const [range, setRange] = useState(getDefaultDateRange());
+  const colors = useMemo(() => getChartColors(1), []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", "cash-flow", range.from, range.to],
@@ -91,13 +86,45 @@ export default function CashFlowPage() {
     chart_data: [],
   };
 
-  const chartData =
+  const chartEntries =
     report.chart_data && report.chart_data.length > 0
       ? report.chart_data
       : [
           { date: range.from, balance: report.opening_balance },
           { date: range.to, balance: report.closing_balance },
         ];
+
+  const lineChartData = {
+    labels: chartEntries.map((d) => d.date),
+    datasets: [
+      {
+        label: "Balance",
+        data: chartEntries.map((d) => d.balance),
+        borderColor: colors[0],
+        backgroundColor: colors[0] + "33",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 3,
+      },
+    ],
+  };
+
+  const lineOptions: ChartOptions<"line"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => formatCurrency(ctx.parsed.y ?? 0),
+        },
+      },
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { ticks: { callback: (v) => `${Number(v) / 1000}k` } },
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -211,25 +238,8 @@ export default function CashFlowPage() {
         </CardHeader>
         <CardContent>
           <div className="h-64">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="date" />
-                  <YAxis tickFormatter={(v) => `${v / 1000}k`} />
-                  <Tooltip
-                    formatter={(v) => formatCurrency(Number(v ?? 0))}
-                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="balance"
-                    stroke="hsl(var(--chart-1))"
-                    strokeWidth={2}
-                    name="Balance"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            {chartEntries.length > 0 ? (
+              <Line data={lineChartData} options={lineOptions} />
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 {t.reports.profitLoss.noChartData}

@@ -1,19 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  Cell,
-} from "recharts";
+import { Bar } from "react-chartjs-2";
+import type { ChartOptions } from "chart.js";
 import { ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import type { AgingReport } from "@/types";
@@ -31,14 +22,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { t } from "@/lib/translations";
-
-const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
+import { getChartColors } from "@/lib/chartjs";
 
 async function fetchPayableAging(): Promise<AgingReport> {
   const res = await apiClient.get<{ data: AgingReport }>("/reports/payable-aging");
@@ -47,6 +31,8 @@ async function fetchPayableAging(): Promise<AgingReport> {
 }
 
 export default function PayableAgingPage() {
+  const colors = useMemo(() => getChartColors(4), []);
+
   const { data, isLoading } = useQuery({
     queryKey: ["reports", "payable-aging"],
     queryFn: fetchPayableAging,
@@ -66,12 +52,44 @@ export default function PayableAgingPage() {
     totals: { current: 0, days_31_60: 0, days_61_90: 0, over_90: 0, total: 0 },
   };
 
-  const chartData = [
-    { name: "Current (0-30)", value: report.totals?.current ?? 0, fill: CHART_COLORS[0] },
-    { name: "31-60 days", value: report.totals?.days_31_60 ?? 0, fill: CHART_COLORS[1] },
-    { name: "61-90 days", value: report.totals?.days_61_90 ?? 0, fill: CHART_COLORS[2] },
-    { name: "90+ days", value: report.totals?.over_90 ?? 0, fill: CHART_COLORS[3] },
-  ].filter((d) => d.value > 0);
+  const chartLabels = ["Current (0-30)", "31-60 days", "61-90 days", "90+ days"];
+  const chartValues = [
+    report.totals?.current ?? 0,
+    report.totals?.days_31_60 ?? 0,
+    report.totals?.days_61_90 ?? 0,
+    report.totals?.over_90 ?? 0,
+  ];
+  const hasChartData = chartValues.some((v) => v > 0);
+
+  const barChartData = {
+    labels: chartLabels,
+    datasets: [
+      {
+        label: "Amount",
+        data: chartValues,
+        backgroundColor: colors,
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const barOptions: ChartOptions<"bar"> = {
+    indexAxis: "y",
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => formatCurrency(ctx.parsed.x ?? 0),
+        },
+      },
+    },
+    scales: {
+      x: { ticks: { callback: (v) => `${Number(v) / 1000}k` } },
+      y: { grid: { display: false } },
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -143,30 +161,14 @@ export default function PayableAgingPage() {
           </Table>
         </CardContent>
       </Card>
-      {chartData.length > 0 && (
+      {hasChartData && (
         <Card>
           <CardHeader>
             <CardTitle>Aging Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ left: 80 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis type="number" tickFormatter={(v) => `${v / 1000}k`} />
-                  <YAxis type="category" dataKey="name" width={120} />
-                  <Tooltip
-                    formatter={(v) => formatCurrency(Number(v ?? 0))}
-                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
-                  />
-                  <Legend />
-                  <Bar dataKey="value" name="Amount" radius={[0, 4, 4, 0]}>
-                    {chartData.map((_, i) => (
-                      <Cell key={i} fill={chartData[i].fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <Bar data={barChartData} options={barOptions} />
             </div>
           </CardContent>
         </Card>

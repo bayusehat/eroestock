@@ -18,6 +18,7 @@ import {
   Settings,
   Shield,
   Send,
+  GraduationCap,
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,7 +43,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
 
 const navItems: { section: string; items: { href: string; label: string; icon: typeof LayoutDashboard; permission?: string }[] }[] = [
-  { section: t.nav.main, items: [{ href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard }] },
+  { section: t.nav.main, items: [{ href: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard }, { href: "/tutorial", label: t.nav.tutorial, icon: GraduationCap }] },
   {
     section: t.nav.business,
     items: [
