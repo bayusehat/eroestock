@@ -170,18 +170,8 @@ Invoice (record payment) → Transaction: Debit Cash, Credit A/R (type=income, i
 ## Files to Modify
 
 ### Backend
-- `backend/app/Http/Controllers/Api/V1/ReportController.php` – All report methods
-
-### Frontend
-- `frontend/src/app/(dashboard)/reports/profit-loss/page.tsx`
-- `frontend/src/app/(dashboard)/reports/income-by-client/page.tsx`
-- `frontend/src/app/(dashboard)/reports/work-order-summary/page.tsx`
-- `frontend/src/app/(dashboard)/reports/receivable-aging/page.tsx`
-- `frontend/src/app/(dashboard)/reports/payroll-summary/page.tsx`
-- `frontend/src/app/(dashboard)/reports/balance-sheet/page.tsx`
-- `frontend/src/app/(dashboard)/reports/expense-by-category/page.tsx`
-- `frontend/src/app/(dashboard)/reports/tax-summary/page.tsx`
+- `app/Http/Controllers/Api/V1/ReportController.php` – All report methods
 
 ### Optional
-- `backend/database/migrations/xxxx_add_invoice_id_to_journal_entries.php`
-- `backend/app/Models/JournalEntry.php` – Add invoice relationship
+- `database/migrations/xxxx_add_invoice_id_to_journal_entries.php`
+- `app/Models/JournalEntry.php` – Add invoice relationship
