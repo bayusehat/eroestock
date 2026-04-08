@@ -42,6 +42,11 @@ class BudgetRequest extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function createdByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');

@@ -1,0 +1,146 @@
+{
+    "nav": {
+        "main": "UTAMA",
+        "business": "BISNIS",
+        "finance": "KEUANGAN",
+        "hr": "SDM",
+        "reports": "LAPORAN",
+        "settings": "PENGATURAN",
+        "dashboard": "Beranda",
+        "workOrders": "Work Orders",
+        "requests": "Requests",
+        "clients": "Clients",
+        "vendors": "Vendors",
+        "invoices": "Invoices",
+        "transactions": "Transactions",
+        "journalEntries": "Journal Entries",
+        "chartOfAccounts": "Chart of Accounts",
+        "employees": "Employees",
+        "payroll": "Payroll",
+        "auditLogs": "Audit Logs",
+        "tutorial": "Tutorial",
+        "profile": "Profil",
+        "logOut": "Keluar",
+        "appName": "Kucatat",
+        "tagline": "Catat, Kelola, Tumbuh."
+    },
+    "common": {
+        "back": "Kembali",
+        "save": "Simpan",
+        "cancel": "Batal",
+        "delete": "Hapus",
+        "edit": "Ubah",
+        "create": "Buat Baru",
+        "view": "Lihat",
+        "search": "Cari",
+        "filter": "Filter",
+        "export": "Ekspor",
+        "loading": "Memuat...",
+        "noData": "Tidak ada data",
+        "select": "Pilih",
+        "from": "Dari",
+        "to": "Sampai",
+        "date": "Tanggal",
+        "amount": "Jumlah",
+        "description": "Keterangan",
+        "status": "Status",
+        "total": "Total",
+        "all": "Semua"
+    },
+    "auth": {
+        "login": "Masuk",
+        "logout": "Keluar",
+        "email": "Email",
+        "password": "Kata Sandi",
+        "loginTitle": "Masuk ke Kucatat",
+        "loginDescription": "Kelola keuangan bisnis Anda dengan mudah",
+        "signingIn": "Sedang masuk...",
+        "signIn": "Masuk",
+        "invalidCredentials": "Email atau kata sandi salah"
+    },
+    "dashboard": {
+        "title": "Beranda",
+        "welcomeBack": "Selamat datang di Kucatat",
+        "overview": "Ringkasan keuangan bisnis Anda hari ini",
+        "revenueMtd": "Pendapatan Bulan Ini",
+        "expensesMtd": "Pengeluaran Bulan Ini",
+        "netProfitMtd": "Laba Bersih Bulan Ini",
+        "cashBalance": "Saldo Kas",
+        "outstandingReceivables": "Piutang",
+        "recentTransactions": "Transaksi Terbaru",
+        "workOrderPipeline": "Work Order Pipeline"
+    },
+    "workOrders": {
+        "title": "Work Orders",
+        "create": "Buat Work Order",
+        "edit": "Edit Work Order",
+        "number": "No. Work Order",
+        "status": {
+            "draft": "Draft",
+            "confirmed": "Confirmed",
+            "in_progress": "In Progress",
+            "completed": "Completed",
+            "invoiced": "Invoiced",
+            "cancelled": "Cancelled"
+        }
+    },
+    "invoices": {
+        "title": "Invoices",
+        "create": "Buat Invoice",
+        "number": "No. Invoice",
+        "status": {
+            "draft": "Draft",
+            "sent": "Terkirim",
+            "partially_paid": "Dibayar Sebagian",
+            "paid": "Lunas",
+            "overdue": "Jatuh Tempo",
+            "cancelled": "Dibatalkan"
+        }
+    },
+    "employees": {
+        "title": "Karyawan",
+        "status": {
+            "active": "Aktif",
+            "inactive": "Nonaktif",
+            "terminated": "Diberhentikan"
+        }
+    },
+    "payroll": {
+        "title": "Penggajian",
+        "status": {
+            "draft": "Draft",
+            "approved": "Disetujui",
+            "paid": "Dibayar"
+        }
+    },
+    "reports": {
+        "title": "Laporan",
+        "profitLoss": "Profit & Loss",
+        "balanceSheet": "Balance Sheet",
+        "cashFlow": "Cash Flow Statement",
+        "trialBalance": "Trial Balance",
+        "generalLedger": "General Ledger",
+        "receivableAging": "Accounts Receivable Aging",
+        "payableAging": "Accounts Payable Aging",
+        "incomeByClient": "Income by Client",
+        "expenseByCategory": "Expense by Category",
+        "workOrderSummary": "Work Order Summary",
+        "payrollSummary": "Payroll Summary",
+        "taxSummary": "Tax Summary"
+    },
+    "settings": {
+        "company": "Pengaturan Perusahaan",
+        "users": "Pengguna",
+        "roles": "Roles & Permissions",
+        "taxRates": "Tax Rates",
+        "auditLogs": "Audit Logs"
+    },
+    "validation": {
+        "required": "Kolom :attribute wajib diisi.",
+        "email": "Kolom :attribute harus berupa alamat email yang valid.",
+        "min": {
+            "string": "Kolom :attribute minimal harus :min karakter."
+        },
+        "unique": "Nilai :attribute sudah digunakan."
+    }
+}
