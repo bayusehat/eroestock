@@ -44,6 +44,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/requests/{budgetRequest}', App\Livewire\Requests\Show::class)->name('requests.show');
     Route::get('/requests/{budgetRequest}/edit', App\Livewire\Requests\Form::class)->name('requests.edit');
 
+    // Brands
+    Route::get('/brands', App\Livewire\Brand\Index::class)->name('brands.index');
+    Route::get('/brands/create', App\Livewire\Brand\Form::class)->name('brands.create');
+    Route::get('/brands/{brand}', App\Livewire\Brand\Show::class)->name('brands.show');
+    Route::get('/brands/{brand}/edit', App\Livewire\Brand\Form::class)->name('brands.edit');
+
     // Clients
     Route::get('/clients', App\Livewire\Clients\Index::class)->name('clients.index');
     Route::get('/clients/create', App\Livewire\Clients\Form::class)->name('clients.create');

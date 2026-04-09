@@ -41,11 +41,11 @@
                             ['href' => '/tutorial', 'label' => 'Tutorial', 'icon' => 'graduation-cap'],
                         ]],
                         ['section' => 'BISNIS', 'items' => [
-                            ['href' => '/work-orders', 'label' => 'Work Orders', 'icon' => 'clipboard-list', 'permission' => 'work_orders-view'],
-                            ['href' => '/requests', 'label' => 'Requests', 'icon' => 'send', 'permission' => 'budget_requests-view'],
-                            ['href' => '/clients', 'label' => 'Clients', 'icon' => 'building-2', 'permission' => 'clients-view'],
-                            ['href' => '/vendors', 'label' => 'Vendors', 'icon' => 'truck', 'permission' => 'vendors-view'],
-                            ['href' => '/invoices', 'label' => 'Invoices', 'icon' => 'file-text', 'permission' => 'invoices-view'],
+                            // ['href' => '/work-orders', 'label' => 'Work Orders', 'icon' => 'clipboard-list', 'permission' => 'work_orders-view'],
+                            // ['href' => '/brands', 'label' => 'Requests', 'icon' => 'send', 'permission' => 'budget_requests-view'],
+                            ['href' => '/brands', 'label' => 'Brand', 'icon' => 'building-2', 'permission' => 'brands-view'],
+                            // ['href' => '/vendors', 'label' => 'Vendors', 'icon' => 'truck', 'permission' => 'vendors-view'],
+                            // ['href' => '/invoices', 'label' => 'Invoices', 'icon' => 'file-text', 'permission' => 'invoices-view'],
                         ]],
                         ['section' => 'KEUANGAN', 'items' => [
                             ['href' => '/transactions', 'label' => 'Transactions', 'icon' => 'arrow-left-right', 'permission' => 'transactions-view'],

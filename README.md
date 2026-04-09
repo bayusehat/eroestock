@@ -1,6 +1,6 @@
-# Kucatat — Catat, Kelola, Tumbuh.
+# Eroestock — Eroestore Stock Management
 
-Kucatat adalah aplikasi pencatatan keuangan untuk UKM. Kelola work order, catat transaksi, atur payroll karyawan, dan buat laporan keuangan — semua dalam satu platform.
+Eroestock adalah aplikasi pencatatan keuangan untuk UKM. Kelola work order, catat transaksi, atur payroll karyawan, dan buat laporan keuangan — semua dalam satu platform.
 
 ## Tech Stack
 
@@ -113,7 +113,7 @@ The app runs at `http://localhost:8000`.
 ## Project Structure
 
 ```
-kucatat/
+Eroestock/
 ├── app/
 │   ├── Http/Controllers/
 │   │   ├── Api/V1/            # JSON API controllers
