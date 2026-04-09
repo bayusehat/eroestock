@@ -1,5 +1,5 @@
 <div class="space-y-6">
-    <x-page-header title="Selamat datang di Kucatat, {{ auth()->user()->name }}" description="Ringkasan keuangan bisnis Anda hari ini" />
+    <x-page-header title="Selamat datang di Eroestock, {{ auth()->user()->name }}" description="Ringkasan keuangan bisnis Anda hari ini" />
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <x-stat-card title="Pendapatan Bulan Ini" :value="App\Helpers\Format::currency($revenueMtd)" icon="trending-up" />

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Kucatat' }} - Kucatat</title>
+    <title>{{ $title ?? 'Eroestock' }} - Eroestock</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -28,7 +28,7 @@
             {{-- Logo --}}
             <div class="border-b border-sidebar-border p-4">
                 <a href="{{ route('dashboard') }}" wire:navigate class="flex flex-col gap-0.5">
-                    <span class="text-lg font-bold tracking-tight text-sidebar-foreground">Kucatat</span>
+                    <span class="text-lg font-bold tracking-tight text-sidebar-foreground">Eroestock</span>
                     <span class="text-[11px] text-muted-foreground">Catat, Kelola, Tumbuh.</span>
                 </a>
             </div>
