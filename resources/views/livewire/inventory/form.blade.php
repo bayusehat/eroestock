@@ -76,7 +76,7 @@
                             </div>
                         @endforeach
                         <button type="button" wire:click="addItem"
-                                class="flex w-full items-center justify-center gap-2 rounded-md border border-dashed px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+                                class="flex w-full items-center justify-center gap-2 rounded-md border border-dashed px-4 py-2 text-sm bg-mist-50 text-muted-foreground hover:bg-accent">
                             <x-icon name="plus" class="size-4" /> Tambah Item
                         </button>
                     </div>

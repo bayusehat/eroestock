@@ -27,13 +27,16 @@ class Index extends Component
 
     public function render()
     {
-        $items = Inventory::with(['item' => function($query){
+        $items = Item::with(['inventory' => function($query){
             if ($this->search) {
                 $s = $this->search;
-                $query->where(fn ($q) => $q->where('name', 'like', "%{$s}%")->orWhere('size', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"));
+                $query->where(fn ($q) => $q->where('size', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))->orderBy('sku');
             }
+        }]);
 
-        }])->orderBy('sku');
+        if ($this->search) {
+            $items->orWhere('name','like',"%{$this->search}%");
+        }
 
         return view('livewire.inventory.index', ['items' => $items->paginate(25)]);
     }

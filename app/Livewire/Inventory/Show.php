@@ -9,11 +9,11 @@ use Livewire\Component;
 
 class Show extends Component
 {
-    public Inventory $item;
+    public Item $item;
 
-    public function mount(Inventory $item): void
+    public function mount(Item $item): void
     {
-        $this->item = $item->load(['item.brand']);
+        $this->item = $item->load(['brand','inventory']);
     }
 
     // public function updateStatus(string $status): void
