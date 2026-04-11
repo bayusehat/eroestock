@@ -15,6 +15,7 @@ class RolePermissionSeeder extends Seeder
             'roles' => ['view', 'create', 'edit', 'delete'],
             'accounts' => ['view', 'create', 'edit', 'delete'],
             'brands' => ['view', 'create', 'edit', 'delete'],
+            'inventory' => ['view', 'create', 'edit', 'delete'],
             'clients' => ['view', 'create', 'edit', 'delete'],
             'vendors' => ['view', 'create', 'edit', 'delete'],
             'work_orders' => ['view', 'create', 'edit', 'delete'],

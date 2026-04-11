@@ -50,6 +50,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/brands/{brand}', App\Livewire\Brand\Show::class)->name('brands.show');
     Route::get('/brands/{brand}/edit', App\Livewire\Brand\Form::class)->name('brands.edit');
 
+    // Inventory
+    Route::get('/items', App\Livewire\Inventory\Index::class)->name('items.index');
+    Route::get('/items/create', App\Livewire\Inventory\Form::class)->name('items.create');
+    Route::get('/items/{item}', App\Livewire\Inventory\Show::class)->name('items.show');
+    Route::get('/items/{item}/edit', App\Livewire\Inventory\Form::class)->name('items.edit');
+
     // Clients
     Route::get('/clients', App\Livewire\Clients\Index::class)->name('clients.index');
     Route::get('/clients/create', App\Livewire\Clients\Form::class)->name('clients.create');

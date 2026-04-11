@@ -3,9 +3,9 @@
         <div class="w-full max-w-md rounded-xl border bg-card p-0 shadow-lg">
             <div class="space-y-3 p-6 pb-2 text-center">
                 <div class="space-y-1">
-                    <h1 class="text-3xl font-bold tracking-tight">Kucatat</h1>
-                    <p class="text-xs text-muted-foreground">Catat, Kelola, Tumbuh.</p>
-                                        <p class="text-sm text-muted-foreground">Kelola keuangan bisnis Anda dengan mudah</p>
+                    <h1 class="text-3xl font-bold tracking-tight">Eroestock</h1>
+                    <p class="text-xs text-muted-foreground">Eroestore Stock Management</p>
+                                        <p class="text-sm text-muted-foreground">Kelola stock bisnis Anda dengan mudah</p>
                 </div>
             </div>
             <form method="POST" action="{{ route('login') }}">

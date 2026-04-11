@@ -44,7 +44,7 @@
                             // ['href' => '/work-orders', 'label' => 'Work Orders', 'icon' => 'clipboard-list', 'permission' => 'work_orders-view'],
                             // ['href' => '/brands', 'label' => 'Requests', 'icon' => 'send', 'permission' => 'budget_requests-view'],
                             ['href' => '/brands', 'label' => 'Brand', 'icon' => 'building-2', 'permission' => 'brands-view'],
-                            // ['href' => '/vendors', 'label' => 'Vendors', 'icon' => 'truck', 'permission' => 'vendors-view'],
+                            ['href' => '/items', 'label' => 'Inventory', 'icon' => 'truck', 'permission' => 'inventory-view'],
                             // ['href' => '/invoices', 'label' => 'Invoices', 'icon' => 'file-text', 'permission' => 'invoices-view'],
                         ]],
                         ['section' => 'KEUANGAN', 'items' => [
