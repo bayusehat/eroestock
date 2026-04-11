@@ -34,10 +34,6 @@ class Index extends Component
             }
         }]);
 
-        if ($this->search) {
-            $items->orWhere('name','like',"%{$this->search}%");
-        }
-
         return view('livewire.inventory.index', ['items' => $items->paginate(25)]);
     }
 }

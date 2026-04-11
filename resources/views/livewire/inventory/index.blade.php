@@ -32,7 +32,16 @@
                             <td class="px-4 py-3">{{ $iv->size ?? 0 }}</td>
                             <td class="px-4 py-3">{{ $iv->store_stock ?? 0 }}</td>
                             <td class="px-4 py-3">{{ $iv->warehouse_stock ?? 0 }}</td>
-                            <td class="px-4 py-3">{{ $iv->total_stock ?? 0 }}</td>
+                            <td class="flex items-center gap-2 px-4 py-3"><span> {{ $iv->total_stock ?? 0 }} </span>
+                                @if ($iv->total_stock < 5)
+                                <div class="group relative flex justify-center">
+                                    <span><x-icon name="alert-circle" class="size-4 text-red-700" data-tooltip-target="tooltip-light"/></span>
+                                    <span class="absolute bottom-full mb-2 hidden group-hover:block w-auto p-2 bg-white text-black text-xs rounded shadow-lg">
+                                        Segera lakukan penambahan stok
+                                    </span>
+                                </div>
+                                @endif
+                            </td>
                              @if($i === 0)
                                 <td class="px-4 py-3" rowspan="{{ $rowspan }}">{{ $item->inventory->sum('total_stock') }}</td>
                             <td class="px-4 py-3 text-right" rowspan="{{ $rowspan }}">
