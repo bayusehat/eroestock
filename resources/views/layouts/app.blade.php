@@ -38,7 +38,7 @@
                     $navGroups = [
                         ['section' => 'UTAMA', 'items' => [
                             ['href' => '/dashboard', 'label' => 'Beranda', 'icon' => 'layout-dashboard'],
-                            ['href' => '/tutorial', 'label' => 'Tutorial', 'icon' => 'graduation-cap'],
+                            // ['href' => '/tutorial', 'label' => 'Tutorial', 'icon' => 'graduation-cap'],
                         ]],
                         ['section' => 'BISNIS', 'items' => [
                             // ['href' => '/work-orders', 'label' => 'Work Orders', 'icon' => 'clipboard-list', 'permission' => 'work_orders-view'],
@@ -172,6 +172,14 @@
                     @endforeach
                 </nav>
                 <div class="ml-auto flex items-center gap-2">
+                    <div class="-mx-1 my-1 h-px bg-border"></div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit"
+                                class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-destructive hover:bg-destructive/10 hover:text-destructive">
+                            <x-icon name="log-out" class="size-4" /> Keluar
+                        </button>
+                    </form>
                 </div>
             </header>
             <main class="flex-1 overflow-auto p-4">
