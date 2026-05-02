@@ -1,13 +1,10 @@
 <div class="space-y-6">
-    <x-page-header title="Items" description="Kelola daftar Item">
+    <x-page-header title="Purchase Order" description="Kelola daftar Purchase Order">
         <a wire:navigate href="{{ route('items.create') }}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            <x-icon name="plus" class="size-4" /> Tambah Item
-        </a>
-        <a wire:navigate href="{{ route('purchase-order.index') }}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            <x-icon name="file-text" class="size-4" /> Purchase Order
+            <x-icon name="plus" class="size-4" /> Tambah Purchase Order
         </a>
     </x-page-header>
-    <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari item..."
+    <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari purchase order..."
            class="h-9 max-w-xs rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
     <div class="rounded-md border overflow-x-auto">
         <table class="w-full text-sm">
@@ -18,7 +15,8 @@
                     <th class="px-4 py-3 font-medium">Size</th>
                     <th class="px-4 py-3 font-medium">Stock Toko</th>
                     {{-- <th class="px-4 py-3 font-medium">Stock Gudang</th> --}}
-                    <th class="px-4 py-3 font-medium">Total Stock</th>
+                    <th class="px-4 py-3 font-medium">Total Stock Toko</th>
+                    <th class="px-4 py-3 font-medium">Purchase Order Proses</th>
                     <th class="px-4 py-3 font-medium">Grand Total Stock</th>
                     <th class="px-4 py-3"></th>
                 </tr>
@@ -64,6 +62,9 @@
                             <td class="flex items-center gap-2 px-4 py-3"><span> {{ $iv->store_stock ?? 0 }} </span>
                             </td>
                              @if($i === 0)
+                                <td class="px-4 py-3">
+                                    3 Waiting PO
+                                </td>
                                 <td class="px-4 py-3" rowspan="{{ $rowspan }}">{{ $item->inventory->sum('total_stock') }}</td>
                             <td class="px-4 py-3 text-right" rowspan="{{ $rowspan }}">
                                 <div x-data="{
@@ -119,7 +120,7 @@
                         </tr>
                     @endforeach
                 @empty
-                    <tr><td colspan="6" class="px-4 py-12 text-center text-muted-foreground">Tidak ada Item</td></tr>
+                    <tr><td colspan="6" class="px-4 py-12 text-center text-muted-foreground">Tidak ada Purchase Order</td></tr>
                 @endforelse
             </tbody>
         </table>

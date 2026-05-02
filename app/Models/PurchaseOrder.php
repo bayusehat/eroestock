@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Inventory extends Model
+class PurchaseOrder extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -17,7 +17,7 @@ class Inventory extends Model
      *
      * @var string
      */
-    protected $table = 'inventories';
+    protected $table = 'purchase_orders';
 
     /**
      * The attributes that aren't mass assignable.
@@ -34,32 +34,12 @@ class Inventory extends Model
     public $timestamps = true;
 
     /**
-     * Get the item that owns the Inventory
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function item(): BelongsTo
-    {
-        return $this->belongsTo(Item::class,'id_item');
-    }
-
-    /**
-     * Get all of the inventory_log for the Inventory
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function inventory_log(): HasMany
-    {
-        return $this->hasMany(InventoryLog::class, 'id_inventory', 'id');
-    }
-
-    /**
-     * Get all of the purchase_order_item for the Inventory
+     * Get all of the purchase_order_item for the PurchaseOrder
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function purchase_order_item(): HasMany
     {
-        return $this->hasMany(PurchaseOrderItem::class, 'inventory_id');
+        return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id');
     }
 }

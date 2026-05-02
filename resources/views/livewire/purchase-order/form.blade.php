@@ -2,27 +2,12 @@
     <x-page-header :title="$isEditing ? 'Edit Item' : 'Tambah Item'" />
     <form wire:submit="save">
         <div class="rounded-lg border bg-card shadow-sm">
-            <div class="border-b p-4"><h3 class="font-semibold">Informasi Item</h3></div>
+            <div class="border-b p-4"><h3 class="font-semibold">Informasi Purchase Order</h3></div>
             <div class="grid gap-4 p-4 sm:grid-cols-2">
                 <div class="space-y-1.5">
-                    <label class="text-sm font-medium">Name <span class="text-destructive">*</span></label>
-                    <input wire:model="name" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring @error('name') border-destructive @enderror" />
-                    @error('name') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-sm font-medium">Brand</label>
-                    <x-select wire:model="id_brand" placeholder="Pilih brand..." :searchable="true" :options="$brands->pluck('name', 'id')->toArray()" />
-                    @error('id_brand') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-sm font-medium">Buy Price</label>
-                    <input wire:model="buy_price" type="number" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                    @error('buy_price') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-sm font-medium">Sell Price</label>
-                    <input wire:model="sell_price" type="number" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                    @error('sell_price') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
+                    <label class="text-sm font-medium">Client / Supplier <span class="text-destructive">*</span></label>
+                    <input wire:model="client_id" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring @error('name') border-destructive @enderror" />
+                    @error('client_id') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                 </div>
             </div>
             <div class="grid gap-4 p-4">
@@ -42,7 +27,6 @@
                                     </button>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <input wire:model="items.{{ $i }}.id" type="hidden"/>
                                     <label class="text-xs font-medium">SKU<span class="text-destructive">*</span></label>
                                     <input wire:model="items.{{ $i }}.sku" type="text" placeholder="Item SKU"
                                            class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />

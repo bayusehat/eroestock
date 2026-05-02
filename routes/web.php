@@ -56,6 +56,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/items/{item}', App\Livewire\Inventory\Show::class)->name('items.show');
     Route::get('/items/{item}/edit', App\Livewire\Inventory\Form::class)->name('items.edit');
 
+    //Purchase Order
+    Route::get('/purchase-order', App\Livewire\PurchaseOrder\Index::class)->name('purchase-order.index');
+
     // Clients
     Route::get('/clients', App\Livewire\Clients\Index::class)->name('clients.index');
     Route::get('/clients/create', App\Livewire\Clients\Form::class)->name('clients.create');

@@ -46,11 +46,14 @@
                             ['href' => '/brands', 'label' => 'Brand', 'icon' => 'building-2', 'permission' => 'brands-view'],
                             ['href' => '/items', 'label' => 'Inventory', 'icon' => 'truck', 'permission' => 'inventory-view'],
                             ['href' => '/stock-opname', 'label' => 'Stock Opname', 'icon' => 'file-text', 'permission' => 'stock-opname-view'],
+                             ['href' => '/clients', 'label' => 'Clients', 'icon' => 'building-2', 'permission' => 'clients-view'],
+                            ['href' => '/vendors', 'label' => 'Vendors', 'icon' => 'truck', 'permission' => 'vendors-view'],
+                            ['href' => '/invoices', 'label' => 'Invoices', 'icon' => 'file-text', 'permission' => 'invoices-view'],
                         ]],
                         ['section' => 'KEUANGAN', 'items' => [
                             ['href' => '/transactions', 'label' => 'Transactions', 'icon' => 'arrow-left-right', 'permission' => 'transactions-view'],
-                            ['href' => '/journal-entries', 'label' => 'Journal Entries', 'icon' => 'book-open', 'permission' => 'journal_entries-view'],
-                            ['href' => '/accounts', 'label' => 'Chart of Accounts', 'icon' => 'network', 'permission' => 'accounts-view'],
+                            // ['href' => '/journal-entries', 'label' => 'Journal Entries', 'icon' => 'book-open', 'permission' => 'journal_entries-view'],
+                            // ['href' => '/accounts', 'label' => 'Chart of Accounts', 'icon' => 'network', 'permission' => 'accounts-view'],
                         ]],
                         ['section' => 'SDM', 'items' => [
                             ['href' => '/employees', 'label' => 'Employees', 'icon' => 'users', 'permission' => 'employees-view'],

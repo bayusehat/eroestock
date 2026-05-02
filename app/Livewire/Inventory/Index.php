@@ -6,6 +6,7 @@ use App\Models\Item;
 use App\Models\Inventory;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Helpers\StockMovement;
 use DB;
 
 class Index extends Component
@@ -43,7 +44,18 @@ class Index extends Component
         $data = DB::transaction(function () use ($id,$side) {
             $inventory = Inventory::find($id);
             if($side == 'store_stock'){
+                $stock_before = $inventory->store_stock;
                 $inventory->store_stock = $this->update_stock;
+                StockMovement::stockLog([
+                    'id_inventory' => $inventory->id,
+                    'user_id' => auth()->id(),
+                    'movement_type' => 'DIRECT SO',
+                    'quantity' => $this->update_stock,
+                    'quantity_before' => $stock_before,
+                    'quantity_after' => $this->update_stock,
+                    'reason' => 'DIRECT',
+                    'notes' => 'DIRECT'
+                ]);
             }else{
                 $inventory->warehouse_stock = $this->update_stock;
             }

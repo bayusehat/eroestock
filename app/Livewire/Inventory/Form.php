@@ -5,6 +5,7 @@ namespace App\Livewire\Inventory;
 use App\Models\Inventory;
 use App\Models\Item;
 use App\Models\Brand;
+use App\Helpers\StockMovement;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
@@ -55,6 +56,7 @@ class Form extends Component
             $this->sell_price = $item->sell_price ?? 0;
             $this->margin = $item->margin ?? 0;
             $this->items = $item->inventory->map(fn ($i) => [
+                'id' => $i->id,
                 'sku' => $i->sku,
                 'size' => $i->size,
                 'color' => $i->color,
@@ -71,7 +73,7 @@ class Form extends Component
 
     public function addItem(): void
     {
-        $this->items[] = ['sku' => '', 'size' => 38, 'color' => 'black', 'store_stock' => 0, 'warehouse_stock' => 0, 'total_stock' => 0];
+        $this->items[] = ['id' => '', 'sku' => '', 'size' => 38, 'color' => 'black', 'store_stock' => 0, 'warehouse_stock' => 0, 'total_stock' => 0];
     }
 
     public function removeItem(int $index): void
@@ -99,23 +101,24 @@ class Form extends Component
             if ($this->item && $this->item->exists) {
                 $this->item->update($data);
                 $isUpdate = true;
-                $this->item->inventory()->delete();
             } else {
                 $this->item = Item::create($data);
                 $isUpdate = false;
             }
 
             foreach ($this->items as $item) {
-                $total_stock = $item['store_stock'] + $item['warehouse_stock'];
-                $this->item->inventory()->create([
-                    'sku' => $item['sku'],
-                    'color' => $item['color'],
-                    'size' => $item['size'] ?? 0,
-                    'store_stock' => $item['store_stock'],
-                    'warehouse_stock' => $item['warehouse_stock'] ?? 0,
-                    'total_stock' => $total_stock ?? 0,
-                ]);
-            }
+                $total_stock = $item['store_stock'];
+                $this->item->inventory()->updateOrCreate(
+                    ['id' => $item['id'] ?: null],
+                    [
+                        'sku' => $item['sku'],
+                        'color' => $item['color'],
+                        'size' => $item['size'] ?? 0,
+                        'store_stock' => $item['store_stock'],
+                        'warehouse_stock' => $item['warehouse_stock'] ?? 0,
+                        'total_stock' => $total_stock ?? 0,
+                    ]);
+                }
         });
 
         session()->flash('success', 'Item berhasil disimpan.');
