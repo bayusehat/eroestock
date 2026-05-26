@@ -5,12 +5,12 @@
             <div class="border-b p-4"><h3 class="font-semibold">Informasi Client</h3></div>
             <div class="grid gap-4 p-4 sm:grid-cols-2">
                 <div class="space-y-1.5">
-                    <label class="text-sm font-medium">Nama <span class="text-destructive">*</span></label>
+                    <label class="text-sm font-medium">Nama<span class="text-destructive">*</span></label>
                     <input wire:model="name" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring @error('name') border-destructive @enderror" />
                     @error('name') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                 </div>
                 <div class="space-y-1.5">
-                    <label class="text-sm font-medium">Kode</label>
+                    <label class="text-sm font-medium">Kode<span class="text-destructive">*</span></label>
                     <input wire:model="code" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
                 </div>
                 <div class="space-y-1.5">
@@ -34,8 +34,8 @@
                     <textarea wire:model="address" rows="3" class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"></textarea>
                 </div>
                 <div class="space-y-1.5">
-                    <label class="text-sm font-medium">Syarat Pembayaran</label>
-                    <input wire:model="payment_terms" type="text" placeholder="e.g. Net 30" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+                    <label class="text-sm font-medium">Terms of Payment</label>
+                    <input wire:model="payment_terms" type="number" min="1" placeholder="e.g. Net 30" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
                 </div>
                 <div class="flex items-center gap-2 pt-5">
                     <input wire:model="is_active" id="is_active" type="checkbox" class="rounded border" />

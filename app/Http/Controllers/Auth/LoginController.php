@@ -27,10 +27,17 @@ class LoginController extends Controller
         ]);
 
         if (! Auth::attempt($credentials)) {
+
             return back()->withErrors(['email' => 'Email atau kata sandi salah'])->onlyInput('email');
         }
 
         $user = Auth::user();
+
+        $hasShopeeToken = auth()->user()->shopeeToken;
+
+        if (!$hasShopeeToken) {
+            return redirect()->route('shopee.connect');
+        }
 
         if (! $user->is_active) {
             Auth::logout();

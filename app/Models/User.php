@@ -43,4 +43,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    /**
+     * Get the shopee token that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function shopeeToken(): BelongsTo
+    {
+        return $this->belongsTo(ShopeeToken::class, 'user_id');
+    }
 }

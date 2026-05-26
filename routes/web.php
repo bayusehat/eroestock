@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ShopeeAuthController;
+use App\Http\Controllers\TikTokShopController;
 use App\Livewire\Dashboard;
 use App\Livewire\Reports\BalanceSheet;
 use App\Livewire\Reports\CashFlow;
@@ -58,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
 
     //Purchase Order
     Route::get('/purchase-order', App\Livewire\PurchaseOrder\Index::class)->name('purchase-order.index');
+    Route::get('/purchase-order/create', App\Livewire\PurchaseOrder\Form::class)->name('purchase-order.create');
 
     // Clients
     Route::get('/clients', App\Livewire\Clients\Index::class)->name('clients.index');
@@ -128,4 +131,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings/roles', Roles::class)->name('settings.roles');
     Route::get('/settings/tax-rates', TaxRates::class)->name('settings.tax-rates');
     Route::get('/settings/audit-logs', AuditLogs::class)->name('settings.audit-logs');
+
+    // Route::prefix('shopee')->name('shopee.')->group(function () {
+    //     Route::get('/auth', [ShopeeAuthController::class, 'redirect'])->name('auth');
+    //     Route::get('/callback', [ShopeeAuthController::class, 'callback'])->name('callback');
+    // });
+    Route::prefix('shopee')->name('shopee.')->group(function () {
+        Route::get('/connect', [ShopeeAuthController::class, 'showConnect'])->name('connect');
+        Route::get('/redirect', [ShopeeAuthController::class, 'redirectToShopee'])->name('redirect');
+        Route::get('/callback', [ShopeeAuthController::class, 'handleShopeeCallback'])->name('callback');
+    });
+
+    Route::get('/tiktok/authorize', [TikTokShopController::class, 'redirectToAuthorize']);
+    Route::get('/tiktok/callback',  [TikTokShopController::class, 'handleCallback']);
+
 });

@@ -21,15 +21,23 @@ class Index extends Component
 
     public bool $showModal = false;
 
+    public array $items = [];
+
+    public function openListPo($id){
+        $data = PurchaseOrderItem::with('inventory_item')->where('purchase_order_id', $id)->get();
+        $this->items[] = $data;
+    }
+
     public function render()
     {
-        $items = Item::with(['inventory' => function($query){
+        $purchaseOrders = PurchaseOrder::with(['client_id' => function($query){
             if ($this->search) {
                 $s = $this->search;
-                $query->where(fn ($q) => $q->where('size', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))->orderBy('sku');
+                $query->where(fn ($q) => $q->where('name', 'like', "%{$s}%")
+                ->orderBy('name'));
             }
         }]);
 
-        return view('livewire.purchase-order.index', ['items' => $items->paginate(25)]);
+        return view('livewire.purchase-order.index', ['purchaseOrders' => $purchaseOrders->paginate(25)]);
     }
 }

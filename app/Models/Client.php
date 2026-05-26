@@ -45,4 +45,14 @@ class Client extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * Get all of the purchaseOrders for the Client
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class, 'client_id');
+    }
 }

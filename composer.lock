@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "60a5f262fbb70679749d2d0a79f697c9",
+    "content-hash": "34a6cbf992ac5d01ec46a4838074087d",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3043,6 +3043,71 @@
                 }
             ],
             "time": "2026-01-02T08:56:05+00:00"
+        },
+        {
+            "name": "muhanz/shoapi",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mu-hanz/shoapi.git",
+                "reference": "2a96134b8e0e106774c2f12ebc0eaab1a980ffb0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mu-hanz/shoapi/zipball/2a96134b8e0e106774c2f12ebc0eaab1a980ffb0",
+                "reference": "2a96134b8e0e106774c2f12ebc0eaab1a980ffb0",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.2",
+                "php": "^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "~7",
+                "phpunit/phpunit": "~9.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "Shoapi": "Muhanz\\Shoapi\\Facades\\Shoapi"
+                    },
+                    "providers": [
+                        "Muhanz\\Shoapi\\ShoapiServiceProvider"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-master": "v1.0.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Muhanz\\Shoapi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mu Hanz",
+                    "email": "muhanz21@gmail.com",
+                    "homepage": "https://github.com/mu-hanz"
+                }
+            ],
+            "description": "Laravel Shopee Open API SDK",
+            "homepage": "https://github.com/mu-hanz/shoapi",
+            "keywords": [
+                "Shoapi",
+                "Shopee API",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/mu-hanz/shoapi/issues",
+                "source": "https://github.com/mu-hanz/shoapi/tree/v1.0.1"
+            },
+            "time": "2023-10-13T19:23:48+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -9788,12 +9853,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

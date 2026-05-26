@@ -3,11 +3,16 @@
     <form wire:submit="save">
         <div class="rounded-lg border bg-card shadow-sm">
             <div class="border-b p-4"><h3 class="font-semibold">Informasi Purchase Order</h3></div>
-            <div class="grid gap-4 p-4 sm:grid-cols-2">
+            <div class="grid gap-4 p-4">
                 <div class="space-y-1.5">
                     <label class="text-sm font-medium">Client / Supplier <span class="text-destructive">*</span></label>
-                    <input wire:model="client_id" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring @error('name') border-destructive @enderror" />
+                    <x-select wire:model="client_id" placeholder="Pilih client..." :searchable="true"
+                                          :options="$clients->pluck('name', 'id')->toArray()" />
                     @error('client_id') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-sm font-medium">Deskripsi </label>
+                   <textarea wire:model="description" rows="3" class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"></textarea>
                 </div>
             </div>
             <div class="grid gap-4 p-4">
@@ -26,36 +31,18 @@
                                         <x-icon name="trash-2" class="size-3.5" /> Remove
                                     </button>
                                 </div>
-                                <div class="space-y-1.5">
-                                    <label class="text-xs font-medium">SKU<span class="text-destructive">*</span></label>
-                                    <input wire:model="items.{{ $i }}.sku" type="text" placeholder="Item SKU"
-                                           class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                                    @error('items.'.$i.'.sku') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                                </div>
-                                <div class="space-y-1.5">
-                                    <label class="text-xs font-medium">Color<span class="text-destructive">*</span></label>
-                                    <input wire:model="items.{{ $i }}.color" type="text" placeholder="Color"
-                                           class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                                    @error('items.'.$i.'.color') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                                </div>
                                 <div class="grid grid-cols-3 gap-3">
                                     <div class="space-y-1.5">
-                                        <label class="text-xs font-medium">Size<span class="text-destructive">*</span></label>
-                                        <input wire:model.lazy="items.{{ $i }}.size" type="number"
-                                               class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                                        @error('items.'.$i.'.size') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
+                                        <label class="text-xs font-medium">Pilih Item / SKU<span class="text-destructive">*</span></label>
+                                        <x-select wire:model="inventory_id" placeholder="Pilih Item..." :searchable="true"
+                                            :options="collect($inventoryItem[0])->pluck('sku','id')->toArray()" />
+                                        @error('items.'.$i.'.inventory_id') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                                     </div>
                                     <div class="space-y-1.5">
-                                        <label class="text-xs font-medium">Store Stock<span class="text-destructive">*</span></label>
-                                        <input wire:model="items.{{ $i }}.store_stock" type="number" placeholder="0"
+                                        <label class="text-xs font-medium">Quantity<span class="text-destructive">*</span></label>
+                                        <input wire:model="items.{{ $i }}.quantity" type="number" placeholder="0"
                                                class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                                        @error('items.'.$i.'.store_stock') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                                    </div>
-                                    <div class="space-y-1.5">
-                                        <label class="text-xs font-medium">Warehouse Stock<span class="text-destructive">*</span></label>
-                                        <input wire:model.lazy="items.{{ $i }}.warehouse_stock" type="number"
-                                               class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                                        @error('items.'.$i.'.warehouse_stock') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
+                                        @error('items.'.$i.'.quantity') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                                     </div>
                                 </div>
                             </div>
