@@ -38,7 +38,7 @@ class Form extends Component
     public function save(): void
     {
         $this->validate();
-        $data = array_filter(['name' => $this->name, 'code' => $this->code ?: null, 'email' => $this->email ?: null,
+        $data = array_filter(['name' => $this->name, 'code' => $this->code ?: '-', 'email' => $this->email ?: null,
                  'phone' => $this->phone ?: null, 'address' => $this->address ?: null,
                  'tax_id' => $this->tax_id ?: null, 'contact_person' => $this->contact_person ?: null,
                  'payment_terms' => $this->payment_terms ?: null, 'bank_name' => $this->bank_name ?: null,
