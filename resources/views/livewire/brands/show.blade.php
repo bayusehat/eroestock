@@ -3,6 +3,12 @@
         <a wire:navigate href="{{ route('brands.index') }}" class="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-accent">
             <x-icon name="arrow-left" class="size-4" /> Kembali
         </a>
+        @if (auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('admin'))
+            <a wire:navigate href="{{ route('brands.edit', $brand) }}"
+               class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                <x-icon name="pencil" class="size-4" /> Edit
+            </a>
+        @endif
     </x-page-header>
     <div class="rounded-lg border bg-card shadow-sm">
         <div class="border-b p-4"><h3 class="font-semibold">Detail Brand</h3></div>

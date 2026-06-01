@@ -9,11 +9,11 @@ class Form extends Component
 {
     public ?Brand $brand = null;
     public string $name = '';
-    public string $code = '';
-    public string $email = '';
-    public string $phone = '';
-    public string $address = '';
-    public string $notes = '';
+    public ?string $code = '';
+    public ?string $email = '';
+    public ?string $phone = '';
+    public ?string $address = '';
+    public ?string $notes = '';
     public bool $is_active = true;
 
     protected function rules(): array

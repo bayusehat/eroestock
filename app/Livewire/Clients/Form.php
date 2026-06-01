@@ -9,14 +9,14 @@ class Form extends Component
 {
     public ?Client $client = null;
     public string $name = '';
-    public string $code = '';
-    public string $email = '';
-    public string $phone = '';
-    public string $address = '';
-    public string $tax_id = '';
-    public string $contact_person = '';
-    public string $payment_terms = '';
-    public string $notes = '';
+    public ?string $code = '';
+    public ?string $email = '';
+    public ?string $phone = '';
+    public ?string $address = '';
+    public ?string $tax_id = '';
+    public ?string $contact_person = '';
+    public ?string $payment_terms = '';
+    public ?string $notes = '';
     public bool $is_active = true;
 
     protected function rules(): array
