@@ -27,6 +27,7 @@ class Form extends Component
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'position' => ['required', 'string'],
             'join_date' => ['required', 'date'],
             'base_salary' => ['required', 'numeric', 'min:0'],
         ];
@@ -46,7 +47,7 @@ class Form extends Component
     {
         $this->validate();
         $data = ['name' => $this->name, 'email' => $this->email ?: null, 'phone' => $this->phone ?: null,
-                 'position' => $this->position ?: null, 'department' => $this->department ?: null,
+                 'position' => $this->position ?: '-', 'department' => $this->department ?: null,
                  'join_date' => $this->join_date, 'status' => $this->status,
                  'base_salary' => $this->base_salary, 'bank_name' => $this->bank_name ?: null,
                  'bank_account' => $this->bank_account ?: null, 'bank_holder' => $this->bank_holder ?: null,

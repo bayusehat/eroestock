@@ -13,7 +13,7 @@
     <div class="rounded-lg border bg-card shadow-sm">
         <div class="border-b p-4"><h3 class="font-semibold">Detail Brand</h3></div>
         <div class="grid gap-4 p-4 sm:grid-cols-2">
-            @foreach ([['Nama', $item->name], ['Brand', $item->brand->name], ['Buy Price', number_format($item->buy_price,0, '', '.')], ['Sell Price', number_format($item->sell_price,0, '', '.')], ['Margin', $item->margin]] as [$label, $value])
+            @foreach ([['Nama', $item->name], ['Brand', $item->brand->name], ['Buy Price', number_format(auth()->user()->hasRole('super_admin') ? $item->buy_price : 0,0, '', '.')], ['Sell Price', number_format($item->sell_price,0, '', '.')], ['Margin', auth()->user()->hasRole('super_admin') ? number_format($item->sell_price - $item->buy_price,0, '', '.') : 0]] as [$label, $value])
                 <div>
                     <p class="text-sm text-muted-foreground">{{ $label }}</p>
                     <p class="font-medium">{{ $value ?? '-' }}</p>

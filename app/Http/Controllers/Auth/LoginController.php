@@ -33,11 +33,11 @@ class LoginController extends Controller
 
         $user = Auth::user();
 
-        $hasShopeeToken = auth()->user()->shopeeToken;
+        // $hasShopeeToken = auth()->user()->shopeeToken;
 
-        if (!$hasShopeeToken) {
-            return redirect()->route('shopee.connect');
-        }
+        // if (!$hasShopeeToken) {
+        //     return redirect()->route('shopee.connect');
+        // }
 
         if (! $user->is_active) {
             Auth::logout();

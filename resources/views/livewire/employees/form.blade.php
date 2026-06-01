@@ -12,7 +12,9 @@
                     </div>
                     <div class="space-y-1.5"><label class="text-sm font-medium">Email</label><input wire:model="email" type="email" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" /></div>
                     <div class="space-y-1.5"><label class="text-sm font-medium">Telepon</label><input wire:model="phone" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" /></div>
-                    <div class="space-y-1.5"><label class="text-sm font-medium">Jabatan</label><input wire:model="position" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" /></div>
+                    <div class="space-y-1.5"><label class="text-sm font-medium">Jabatan <span class="text-destructive">*</span></label><input wire:model="position" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+                    @error('position') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
+                    </div>
                     <div class="space-y-1.5"><label class="text-sm font-medium">Departemen</label><input wire:model="department" type="text" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" /></div>
                     <div class="space-y-1.5"><label class="text-sm font-medium">Tanggal Bergabung <span class="text-destructive">*</span></label><input wire:model="join_date" type="date" class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" /></div>
                     <div class="space-y-1.5">

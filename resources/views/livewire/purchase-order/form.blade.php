@@ -34,8 +34,8 @@
                                 <div class="grid grid-cols-3 gap-3">
                                     <div class="space-y-1.5">
                                         <label class="text-xs font-medium">Pilih Item / SKU<span class="text-destructive">*</span></label>
-                                        <x-select wire:model="inventory_id" placeholder="Pilih Item..." :searchable="true"
-                                            :options="collect($inventoryItem[0])->pluck('sku','id')->toArray()" />
+                                        <x-select wire:model="items.{{$i}}.inventory_id" placeholder="Pilih Item..." :searchable="true"
+                                            :options="collect($inventoryItem[0])->pluck('sku','id')->toArray()" option-value="id" option-label="sku" />
                                         @error('items.'.$i.'.inventory_id') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                                     </div>
                                     <div class="space-y-1.5">
