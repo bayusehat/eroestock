@@ -62,17 +62,17 @@
                                         @error('items.'.$i.'.size') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                                     </div>
                                     <div class="space-y-1.5">
-                                        <label class="text-xs font-medium">Store Stock<span class="text-destructive">*</span></label>
+                                        <label class="text-xs font-medium">Stock<span class="text-destructive">*</span></label>
                                         <input wire:model="items.{{ $i }}.store_stock" type="number" placeholder="0"
                                                class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
                                         @error('items.'.$i.'.store_stock') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                                     </div>
-                                    <div class="space-y-1.5">
+                                    {{-- <div class="space-y-1.5">
                                         <label class="text-xs font-medium">Warehouse Stock<span class="text-destructive">*</span></label>
                                         <input wire:model.lazy="items.{{ $i }}.warehouse_stock" type="number"
                                                class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
                                         @error('items.'.$i.'.warehouse_stock') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         @endforeach

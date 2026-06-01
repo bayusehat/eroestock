@@ -29,7 +29,6 @@ class Form extends Component
             'items.*.color' => ['required'],
             'items.*.size' => ['required', 'numeric', 'min:1'],
             'items.*.store_stock' => ['required', 'numeric', 'min:1'],
-            'items.*.warehouse_stock' => ['required', 'numeric', 'min:1'],
         ];
     }
 
@@ -41,7 +40,6 @@ class Form extends Component
             'items.*.color' => 'Color item is required',
             'items.*.size' => 'Size item is required',
             'items.*.store_stock' => 'Store Stock item is required',
-            'items.*.warehouse_stock' => 'Warehouse stock item is required',
         ];
     }
 
@@ -61,7 +59,6 @@ class Form extends Component
                 'size' => $i->size,
                 'color' => $i->color,
                 'store_stock' => $i->store_stock,
-                'warehouse_stock' => $i->warehouse_stock,
                 'total_stock' => $i->total_stock,
             ])->toArray();
         }
@@ -73,7 +70,7 @@ class Form extends Component
 
     public function addItem(): void
     {
-        $this->items[] = ['id' => '', 'sku' => '', 'size' => 38, 'color' => 'black', 'store_stock' => 0, 'warehouse_stock' => 0, 'total_stock' => 0];
+        $this->items[] = ['id' => '', 'sku' => '', 'size' => 38, 'color' => 'black', 'store_stock' => 0, 'total_stock' => 0];
     }
 
     public function removeItem(int $index): void
@@ -95,7 +92,7 @@ class Form extends Component
                 'name' => $this->name,
                 'buy_price' => $this->buy_price,
                 'sell_price' => $this->sell_price ?: 0,
-                'margin' => $this->margin ?: 0
+                'margin' => $this->sell_price - $this->buy_price ?: 0
             ];
 
             if ($this->item && $this->item->exists) {
@@ -115,7 +112,7 @@ class Form extends Component
                         'color' => $item['color'],
                         'size' => $item['size'] ?? 0,
                         'store_stock' => $item['store_stock'],
-                        'warehouse_stock' => $item['warehouse_stock'] ?? 0,
+                        'warehouse_stock' => 0,
                         'total_stock' => $total_stock ?? 0,
                     ]);
                 }
