@@ -1,6 +1,6 @@
 <div class="space-y-6">
-    <x-page-header :title="$isEditing ? 'Edit Work Order' : 'Create Work Order'"
-                   :description="$isEditing ? 'Ubah work order yang ada' : 'Buat work order baru'" />
+    <x-page-header :title="$isEditing ? 'Edit Order' : 'Create Order'"
+                   :description="$isEditing ? 'Ubah order yang ada' : 'Buat order baru'" />
 
     <form wire:submit="save">
         <div class="grid gap-6 lg:grid-cols-2">
@@ -13,9 +13,8 @@
                     <div class="space-y-4 p-4">
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div class="space-y-1.5">
-                                <label class="text-sm font-medium">Client</label>
-                                <x-select wire:model="client_id" placeholder="Pilih client..." :searchable="true"
-                                          :options="$clients->pluck('name', 'id')->toArray()" />
+                                <label class="text-sm font-medium">Customer <span class="text-destructive">*</span></label>
+                                <x-select wire:model="client_id" placeholder="Pilih customer..." :searchable="true" :options="$clients->pluck('name', 'id')->toArray()" />
                             </div>
                             <div class="space-y-1.5">
                                 <label class="text-sm font-medium">Client WO ID</label>
@@ -36,9 +35,10 @@
                         </div>
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div class="space-y-1.5">
-                                <label class="text-sm font-medium">Kategori</label>
+                                <label class="text-sm font-medium">Kategori <span class="text-destructive">*</span></label>
                                 <x-select wire:model="category" placeholder="Pilih kategori"
                                           :options="['' => 'Pilih kategori', 'service' => 'Service', 'product' => 'Product', 'consulting' => 'Consulting', 'other' => 'Other']" />
+                                @error('category') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                             </div>
                             <div class="space-y-1.5">
                                 <label class="text-sm font-medium">Priority</label>
@@ -81,13 +81,17 @@
                                     </button>
                                 </div>
                                 <div class="space-y-1.5">
-                                    <label class="text-xs font-medium">Description</label>
+                                    {{-- <label class="text-xs font-medium">Description</label>
                                     <input wire:model="items.{{ $i }}.description" type="text" placeholder="Item description"
-                                           class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+                                           class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" /> --}}
+                                    <label class="text-xs font-medium">Pilih Item / SKU<span class="text-destructive">*</span></label>
+                                    <x-select wire:model.live="items.{{ $i }}.inventory_id" placeholder="Pilih Item..." :searchable="true"
+                                        :options="collect($inventoryItem[0])->pluck('sku','id')->toArray()" option-value="id" option-label="sku" />
+                                    @error('items.'.$i.'.inventory_id') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="grid grid-cols-3 gap-3">
                                     <div class="space-y-1.5">
-                                        <label class="text-xs font-medium">Qty</label>
+                                        <label class="text-xs font-medium">Quantity</label>
                                         <input wire:model.lazy="items.{{ $i }}.quantity" type="number" step="0.01"
                                                class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
                                     </div>
@@ -167,7 +171,7 @@
                class="rounded-md border px-4 py-2 text-sm hover:bg-accent">Batal</a>
             <button type="submit"
                     class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                <span wire:loading.remove>{{ $isEditing ? 'Simpan Perubahan' : 'Buat Work Order' }}</span>
+                <span wire:loading.remove>{{ $isEditing ? 'Simpan Perubahan' : 'Buat Order' }}</span>
                 <span wire:loading class="flex items-center gap-2">
                     <x-icon name="loader-2" class="size-4 animate-spin" /> Menyimpan...
                 </span>

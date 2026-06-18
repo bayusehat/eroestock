@@ -5,6 +5,7 @@ namespace App\Livewire\WorkOrders;
 use App\Models\Client;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderItem;
+use App\Models\Inventory;
 use App\Traits\GeneratesNumber;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -22,14 +23,16 @@ class Form extends Component
     public string $order_date = '';
     public string $due_date = '';
     public array $items = [];
+    public array $inventoryItem = [];
 
     protected function rules(): array
     {
         return [
+            'client_id' => ['required'],
             'title' => ['required', 'string', 'max:255'],
             'order_date' => ['required', 'date'],
+            'category' => ['required'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.description' => ['required', 'string'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.unit' => ['required', 'string'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
@@ -42,6 +45,7 @@ class Form extends Component
     {
         $this->workOrder = $workOrder;
         $this->order_date = now()->format('Y-m-d');
+        $this->inventoryItem[] = Inventory::all();
 
         if ($workOrder && $workOrder->exists) {
             $this->client_id = $workOrder->client_id;
@@ -53,7 +57,8 @@ class Form extends Component
             $this->order_date = $workOrder->order_date?->format('Y-m-d') ?? now()->format('Y-m-d');
             $this->due_date = $workOrder->due_date?->format('Y-m-d') ?? '';
             $this->items = $workOrder->items->map(fn ($i) => [
-                'description' => $i->description, 'quantity' => $i->quantity,
+                'id' => $i->id,
+                'inventory_id' => $i->inventory_id, 'quantity' => $i->quantity,
                 'unit' => $i->unit, 'unit_price' => $i->unit_price,
                 'discount' => $i->discount, 'tax_rate' => $i->tax_rate,
             ])->toArray();
@@ -66,7 +71,7 @@ class Form extends Component
 
     public function addItem(): void
     {
-        $this->items[] = ['description' => '', 'quantity' => 1, 'unit' => 'pcs', 'unit_price' => 0, 'discount' => 0, 'tax_rate' => 0];
+        $this->items[] = ['id' => '', 'inventory_id' => '', 'quantity' => 1, 'unit' => 'pcs', 'unit_price' => 0, 'discount' => 0, 'tax_rate' => 0];
     }
 
     public function removeItem(int $index): void
@@ -117,9 +122,9 @@ class Form extends Component
 
             if ($this->workOrder && $this->workOrder->exists) {
                 $this->workOrder->update($data);
-                $this->workOrder->items()->delete();
+                // $this->workOrder->items()->delete();
             } else {
-                $data['wo_number'] = GeneratesNumber::generateNumber('WO', 'work_orders', 'wo_number', 'Y');
+                $data['wo_number'] = GeneratesNumber::generateNumber('OD', 'work_orders', 'wo_number', 'Y');
                 $data['status'] = 'draft';
                 $data['created_by'] = auth()->id();
                 $this->workOrder = WorkOrder::create($data);
@@ -129,16 +134,18 @@ class Form extends Component
                 $lineTotal = $item['quantity'] * $item['unit_price'];
                 $tax = $lineTotal * (($item['tax_rate'] ?? 0) / 100);
                 $subtotal = $lineTotal - ($item['discount'] ?? 0) + $tax;
-                $this->workOrder->items()->create([
-                    'description' => $item['description'], 'quantity' => $item['quantity'],
+                $this->workOrder->items()->updateOrCreate(
+                ['id' => $item['id'] ?: null],
+                [
+                    'inventory_id' => $item['inventory_id'], 'quantity' => $item['quantity'],
                     'unit' => $item['unit'], 'unit_price' => $item['unit_price'],
                     'discount' => $item['discount'] ?? 0, 'tax_rate' => $item['tax_rate'] ?? 0,
-                    'subtotal' => $subtotal,
+                    'subtotal' => $subtotal, 'description' => '-'
                 ]);
             }
         });
 
-        session()->flash('success', 'Work order berhasil disimpan.');
+        session()->flash('success', 'Order berhasil disimpan.');
         $this->redirect(route('work-orders.index'), navigate: true);
     }
 

@@ -12,6 +12,7 @@ class WorkOrderItem extends Model
 
     protected $fillable = [
         'work_order_id',
+        'inventory_id',
         'description',
         'quantity',
         'unit',

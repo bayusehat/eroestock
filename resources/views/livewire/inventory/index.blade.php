@@ -1,10 +1,13 @@
 <div class="space-y-6">
     <x-page-header title="Items" description="Kelola daftar Item">
-        <a wire:navigate href="{{ route('items.create') }}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            <x-icon name="plus" class="size-4" /> Tambah Item
+        <a wire:navigate href="{{ route('stock-opname.index') }}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <x-icon name="storage" class="size-4" /> Stock Opname
         </a>
         <a wire:navigate href="{{ route('purchase-order.index') }}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <x-icon name="file-text" class="size-4" /> Purchase Order
+        </a>
+        <a wire:navigate href="{{ route('items.create') }}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <x-icon name="plus" class="size-4" /> Tambah Item
         </a>
     </x-page-header>
     <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari item..."
@@ -17,7 +20,6 @@
                     <th class="px-4 py-3 font-medium">SKU</th>
                     <th class="px-4 py-3 font-medium">Size</th>
                     <th class="px-4 py-3 font-medium">Stock Toko</th>
-                    {{-- <th class="px-4 py-3 font-medium">Stock Gudang</th> --}}
                     <th class="px-4 py-3 font-medium">Total Stock</th>
                     <th class="px-4 py-3 font-medium">Grand Total Stock</th>
                     <th class="px-4 py-3"></th>
@@ -48,19 +50,6 @@
                                     </div>
                                 </div>
                             </td>
-                            {{-- <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                        <div class="group relative flex justify-center">
-                                            <span class="m-1">{{ $iv->warehouse_stock ?? 0 }}</span>
-                                            @if ($iv->warehouse_stock < 5)
-                                            <span><x-icon name="alert-circle" class="size-4 text-red-700" data-tooltip-target="tooltip-light" x-on:click="$wire.changeStock({{$iv->id}},'warehouse_stock')"/></span>
-                                            <span class="absolute bottom-full mb-2 hidden group-hover:block w-auto p-2 bg-white text-black text-xs rounded shadow-lg">
-                                                Segera lakukan penambahan stok
-                                            </span>
-                                            @endif
-                                    </div>
-                                </div>
-                            </td> --}}
                             <td class="flex items-center gap-2 px-4 py-3"><span> {{ $iv->store_stock ?? 0 }} </span>
                             </td>
                              @if($i === 0)
@@ -111,6 +100,10 @@
                                                 class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                                 <x-icon name="pencil" class="size-4" /> Edit
                                             </a>
+                                            <button wire:click="delete({{ $item->id }})"
+                                                class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
+                                                <x-icon name="trash-2" class="size-4" /> Hapus
+                                            </button>
                                         </div>
                                     </template>
                                 </div>

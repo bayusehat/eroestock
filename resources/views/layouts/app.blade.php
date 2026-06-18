@@ -38,10 +38,10 @@
                     $navGroups = [
                         ['section' => 'UTAMA', 'items' => [
                             ['href' => '/dashboard', 'label' => 'Beranda', 'icon' => 'layout-dashboard'],
-                            // ['href' => '/tutorial', 'label' => 'Tutorial', 'icon' => 'graduation-cap'],
+                            ['href' => '/tutorial', 'label' => 'Tutorial', 'icon' => 'graduation-cap'],
                         ]],
                         ['section' => 'BISNIS', 'items' => [
-                            // ['href' => '/work-orders', 'label' => 'Work Orders', 'icon' => 'clipboard-list', 'permission' => 'work_orders-view'],
+                            ['href' => '/work-orders', 'label' => 'Orders', 'icon' => 'clipboard-list', 'permission' => 'work_orders-view'],
                             // ['href' => '/brands', 'label' => 'Requests', 'icon' => 'send', 'permission' => 'budget_requests-view'],
                             ['href' => '/brands', 'label' => 'Brand', 'icon' => 'building-2', 'permission' => 'brands-view'],
                             ['href' => '/items', 'label' => 'Inventory', 'icon' => 'truck', 'permission' => 'inventory-view'],
@@ -52,8 +52,8 @@
                         ]],
                         ['section' => 'KEUANGAN', 'items' => [
                             ['href' => '/transactions', 'label' => 'Transactions', 'icon' => 'arrow-left-right', 'permission' => 'transactions-view'],
-                            // ['href' => '/journal-entries', 'label' => 'Journal Entries', 'icon' => 'book-open', 'permission' => 'journal_entries-view'],
-                            // ['href' => '/accounts', 'label' => 'Chart of Accounts', 'icon' => 'network', 'permission' => 'accounts-view'],
+                            ['href' => '/journal-entries', 'label' => 'Journal Entries', 'icon' => 'book-open', 'permission' => 'journal_entries-view'],
+                            ['href' => '/accounts', 'label' => 'Chart of Accounts', 'icon' => 'network', 'permission' => 'accounts-view'],
                         ]],
                         ['section' => 'SDM', 'items' => [
                             ['href' => '/employees', 'label' => 'Employees', 'icon' => 'users', 'permission' => 'employees-view'],
@@ -150,7 +150,7 @@
                         $breadcrumbs = [];
                         $href = '';
                         $labels = [
-                            'dashboard' => 'Dashboard', 'work-orders' => 'Work Orders', 'requests' => 'Requests',
+                            'dashboard' => 'Dashboard', 'work-orders' => 'Orders', 'requests' => 'Requests',
                             'clients' => 'Clients', 'vendors' => 'Vendors', 'invoices' => 'Invoices',
                             'transactions' => 'Transactions', 'journal-entries' => 'Journal Entries',
                             'accounts' => 'Chart of Accounts', 'employees' => 'Employees', 'payroll' => 'Payroll',
@@ -176,6 +176,8 @@
                 </nav>
                 <div class="ml-auto flex items-center gap-2">
                     <div class="-mx-1 my-1 h-px bg-border"></div>
+                    <a href="#" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-cyan-100 hover:bg-cyan/10 hover:text-syan-900"><x-icon name="music" class="size-4" target="_blank" /> Connect TikTok</a>
+                    <a href="{{ route('shopee.connect') }}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-orange-100 hover:bg-orange/10 hover:text-orange-900 text-nowrap" target="_blank"><x-icon name="hand-bag" class="size-4" /> {{ auth()->user()->shopeeToken ? 'Shopee Connected' : 'Connect Shopee' }}</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"

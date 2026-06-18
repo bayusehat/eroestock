@@ -39,7 +39,7 @@ class LoginController extends Controller
         //     return redirect()->route('shopee.connect');
         // }
 
-        if (! $user->is_active) {
+        if (!$user->is_active) {
             Auth::logout();
 
             return back()->withErrors(['email' => 'Akun tidak aktif'])->onlyInput('email');

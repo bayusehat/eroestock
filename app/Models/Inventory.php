@@ -62,4 +62,14 @@ class Inventory extends Model
     {
         return $this->hasMany(PurchaseOrderItem::class, 'inventory_id');
     }
+
+    /**
+     * Get all of the stock_opname_item for the Inventory
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function stock_opname_item(): HasMany
+    {
+        return $this->hasMany(StockOpnameItem::class, 'inventory_id');
+    }
 }

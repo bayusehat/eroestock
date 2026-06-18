@@ -1,14 +1,14 @@
 <div class="space-y-6">
-    <x-page-header title="Work Orders" description="Kelola work order">
+    <x-page-header title="Orders" description="Kelola order">
         <a wire:navigate href="{{ route('work-orders.create') }}"
            class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            <x-icon name="plus" class="size-4" /> Create Work Order
+            <x-icon name="plus" class="size-4" /> Create Order
         </a>
     </x-page-header>
 
     {{-- Filters --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari WO number atau judul..."
+        <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari Order number atau judul..."
                class="h-9 max-w-xs rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
         <x-select wire:model.live="statusFilter" placeholder="Semua Status"
                   :options="['' => 'Semua Status', 'draft' => 'Draft', 'confirmed' => 'Confirmed', 'in_progress' => 'In Progress', 'completed' => 'Completed', 'invoiced' => 'Invoiced', 'cancelled' => 'Cancelled']" class="w-44" />
@@ -21,7 +21,7 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b bg-muted/50 text-left text-muted-foreground">
-                    <th class="px-4 py-3 font-medium">WO Number</th>
+                    <th class="px-4 py-3 font-medium">Order Number</th>
                     <th class="px-4 py-3 font-medium">Client</th>
                     <th class="px-4 py-3 font-medium">Judul</th>
                     <th class="px-4 py-3 font-medium">Priority</th>

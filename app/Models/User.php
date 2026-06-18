@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
@@ -52,5 +53,15 @@ class User extends Authenticatable
     public function shopeeToken(): BelongsTo
     {
         return $this->belongsTo(ShopeeToken::class, 'user_id');
+    }
+
+    /**
+     * Get all of the stock_opnames for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function stock_opnames(): HasMany
+    {
+        return $this->hasMany(StockOpname::class, 'so_by', 'id');
     }
 }

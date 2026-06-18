@@ -145,4 +145,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tiktok/authorize', [TikTokShopController::class, 'redirectToAuthorize']);
     Route::get('/tiktok/callback',  [TikTokShopController::class, 'handleCallback']);
 
+    // Stock Opname
+    Route::get('/stock-opname', App\Livewire\StockOpname\Index::class)->name('stock-opname.index');
+    Route::get('/stock-opname/create', App\Livewire\StockOpname\Form::class)->name('stock-opname.create');
+    Route::get('/stock-opname/{stockOpname}', App\Livewire\StockOpname\Show::class)->name('stock-opname.show');
+    Route::get('/stock-opname/{stockOpname}/edit', App\Livewire\StockOpname\Form::class)->name('stock-opname.edit');
+
 });
