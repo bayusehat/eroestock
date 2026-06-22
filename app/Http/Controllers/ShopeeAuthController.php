@@ -6,6 +6,7 @@ use App\Models\ShopeeToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Muhanz\Shoapi\Facades\Shoapi;
+use App\Helpers\Format;
 
 class ShopeeAuthController extends Controller
 {
@@ -119,6 +120,8 @@ class ShopeeAuthController extends Controller
                 ->request($params)
                 ->response();
 
+            $response = Format::parseData($response);
+
             if ($response['api_status'] === 'success') {
                 $token->update([
                     'access_token' => $response['access_token'],
@@ -128,7 +131,7 @@ class ShopeeAuthController extends Controller
                 ]);
             }
 
-            return $token;
+            return redirect()->back()->with('success','Token Shopee berhasil diperbarui');
         } catch (\Exception $e) {
             throw new \Exception('Gagal refresh token: ' . $e->getMessage());
         }

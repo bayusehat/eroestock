@@ -140,6 +140,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/connect', [ShopeeAuthController::class, 'showConnect'])->name('connect');
         Route::get('/redirect', [ShopeeAuthController::class, 'redirectToShopee'])->name('redirect');
         Route::get('/callback', [ShopeeAuthController::class, 'handleShopeeCallback'])->name('callback');
+        Route::get('/refresh/{userId}/{shopId}', [ShopeeAuthController::class, 'refreshToken'])->name('refresh');
     });
 
     Route::get('/tiktok/authorize', [TikTokShopController::class, 'redirectToAuthorize']);

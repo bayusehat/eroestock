@@ -20,7 +20,9 @@
         <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari Order number atau judul..."
                class="h-9 max-w-xs rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
         <x-select wire:model.live="statusFilter" placeholder="Semua Status"
-                  :options="['' => 'Semua Status', 'SHIPPED' => 'Shipeed', 'TO_CONFIRM_RECEIVE' => 'To Confirm Recieve', 'CANCELLED' => 'Cancelled', 'READY_TO_SHIP' => 'Ready to Ship','COMPLETED' => 'Completed']" class="w-44" />
+                  :options="['' => 'Semua Status', 'draft' => 'Draft', 'confirmed' => 'Confirmed', 'in_progress' => 'In Progress', 'completed' => 'Completed', 'invoiced' => 'Invoiced', 'cancelled' => 'Cancelled']" class="w-44" />
+        <x-select wire:model.live="clientFilter" placeholder="Semua Client" :searchable="true"
+                  :options="collect(['' => 'Semua Client'])->union($clients->pluck('name', 'id'))->toArray()" class="w-44" />
     </div>
 
     {{-- Table --}}
@@ -29,9 +31,12 @@
             <thead>
                 <tr class="border-b bg-muted/50 text-left text-muted-foreground">
                     <th class="px-4 py-3 font-medium">Order Number</th>
-                    <th class="px-4 py-3 font-medium">Source</th>
+                    <th class="px-4 py-3 font-medium">Client</th>
+                    <th class="px-4 py-3 font-medium">Judul</th>
+                    <th class="px-4 py-3 font-medium">Priority</th>
                     <th class="px-4 py-3 font-medium">Status</th>
                     <th class="px-4 py-3 font-medium">Order Date</th>
+                    <th class="px-4 py-3 font-medium">Due Date</th>
                     <th class="px-4 py-3 text-right font-medium">Grand Total</th>
                     <th class="px-4 py-3 font-medium"></th>
                 </tr>
@@ -40,12 +45,12 @@
                 @forelse ($workOrders as $wo)
                     @php
                         $statusColors = [
-                            'READY_TO_SHIP' => 'bg-muted text-muted-foreground',
+                            'draft' => 'bg-muted text-muted-foreground',
                             'confirmed' => 'bg-blue-500/15 text-blue-400',
-                            'TO_CONFIRM_RECEIVE' => 'bg-yellow-500/15 text-yellow-400',
-                            'COMPLETED' => 'bg-green-500/15 text-green-400',
-                            'SHIPPED' => 'bg-purple-500/15 text-purple-400',
-                            'CANCELLED' => 'bg-red-500/15 text-red-400',
+                            'in_progress' => 'bg-yellow-500/15 text-yellow-400',
+                            'completed' => 'bg-green-500/15 text-green-400',
+                            'invoiced' => 'bg-purple-500/15 text-purple-400',
+                            'cancelled' => 'bg-red-500/15 text-red-400',
                         ];
                         $priorityColors = [
                             'low' => 'bg-muted text-muted-foreground',
@@ -57,17 +62,24 @@
                     <tr class="border-b hover:bg-muted/30 transition-colors">
                         <td class="px-4 py-3">
                             <a wire:navigate href="{{ route('work-orders.show', $wo) }}" class="font-medium text-primary hover:underline">
-                                {{ $wo->order_sn }}
+                                {{ $wo->wo_number }}
                             </a>
                         </td>
-                        <td class="px-4 py-3">{{ $wo->flag }}</td>
+                        <td class="px-4 py-3">{{ $wo->client?->name ?? '-' }}</td>
+                        <td class="px-4 py-3 max-w-[200px] truncate">{{ $wo->title }}</td>
                         <td class="px-4 py-3">
-                            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium {{ $statusColors[$wo->order_status] ?? 'bg-muted' }}">
-                                {{ str_replace('_', ' ', $wo->order_status) }}
+                            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium {{ $priorityColors[$wo->priority ?? 'medium'] ?? 'bg-muted' }}">
+                                {{ $wo->priority ?? '-' }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">{{ \Carbon\Carbon::createFromTimestamp($wo->create_time)->toDateTimeString() }}</td>
-                        <td class="px-4 py-3 text-right font-medium">{{ App\Helpers\Format::currency($wo->total_amount) }}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium {{ $statusColors[$wo->status] ?? 'bg-muted' }}">
+                                {{ str_replace('_', ' ', $wo->status) }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">{{ $wo->order_date?->format('d/m/Y') }}</td>
+                        <td class="px-4 py-3">{{ $wo->due_date?->format('d/m/Y') ?? '-' }}</td>
+                        <td class="px-4 py-3 text-right font-medium">{{ App\Helpers\Format::currency($wo->grand_total) }}</td>
                         <td class="px-4 py-3">
                             <div x-data="{
                                 open: false,
@@ -110,6 +122,22 @@
                                            class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                             <x-icon name="eye" class="size-4" /> View
                                         </a>
+                                        @if (in_array($wo->status, ['draft', 'confirmed']))
+                                            <a wire:navigate href="{{ route('work-orders.edit', $wo) }}"
+                                               class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
+                                                <x-icon name="pencil" class="size-4" /> Edit
+                                            </a>
+                                        @endif
+                                        <button wire:click="duplicate({{ $wo->id }})" @click="close()"
+                                                class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
+                                            <x-icon name="copy" class="size-4" /> Duplikat
+                                        </button>
+                                        @if (isset($transitions[$wo->status]))
+                                            <button wire:click="openStatusModal({{ $wo->id }})" @click="close()"
+                                                    class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
+                                                <x-icon name="refresh-cw" class="size-4" /> Ubah Status
+                                            </button>
+                                        @endif
                                     </div>
                                 </template>
                             </div>

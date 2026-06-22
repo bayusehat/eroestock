@@ -73,13 +73,9 @@ class Form extends Component
                 'stock_system' => $i->store_stock,
                 'stock_inhouse' => $i->stock_inhouse ?? 0,
                 'stock_remaining' => $i->stock_remaining ?? 0,
-                'notes' => $i->notes ?? 0
+                'notes' => $i->notes ?? '-'
             ])->toArray();
         }
-
-        // if (empty($this->stockOpname)) {
-        //     $this->addItem();
-        // }
     }
 
     public function addItem(): void
@@ -136,7 +132,6 @@ class Form extends Component
     public function render()
     {
         return view('livewire.stock-opname.form',[
-            'list' => Inventory::with('item')->get(),
             'isEditing' => $this->stockOpname && $this->stockOpname->exists,
         ]);
     }

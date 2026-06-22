@@ -77,10 +77,13 @@
                                         @click.outside="close()"
                                         x-ref="menu" :style="{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999 }"
                                         class="w-40 origin-top-right rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
-                                        <button wire:click="openStatusModal({{ $stockOpname->id }})" @click="close()"
-                                                class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
-                                            <x-icon name="refresh-cw" class="size-4" /> Ubah Status
-                                        </button>
+                                          @if ($stockOpname->status != 'approved')
+                                            <button wire:click="openStatusModal({{ $stockOpname->id }})" @click="close()"
+                                                    class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
+                                                <x-icon name="refresh-cw" class="size-4" /> Ubah Status
+                                            </button>
+                                        @endif
+
                                         <a wire:navigate href="{{ route('stock-opname.show', $stockOpname) }}"
                                         class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                             <x-icon name="eye" class="size-4" /> View
@@ -89,12 +92,12 @@
                                             class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                             <x-icon name="pencil" class="size-4" /> Edit
                                         </a>
-                                        @if (isset($transitions[$stockOpname->status]))
+                                        {{-- @if (isset($transitions[$stockOpname->status]))
                                             <button wire:click="openStatusModal({{ $stockOpname->id }})" @click="close()"
                                                     class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                                 <x-icon name="refresh-cw" class="size-4" /> Ubah Status
                                             </button>
-                                        @endif
+                                        @endif --}}
                                         <button wire:click="delete({{ $stockOpname->id }})"
                                             class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                             <x-icon name="trash-2" class="size-4" /> Hapus

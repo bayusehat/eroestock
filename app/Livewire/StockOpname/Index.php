@@ -8,6 +8,7 @@ use App\Models\StockOpname;
 use App\Models\StockOpnameItem;
 use Livewire\Component;
 use Livewire\WithPagination;
+use DB;
 
 class Index extends Component
 {
@@ -32,8 +33,12 @@ class Index extends Component
     }
 
     public function delete($id){
-        StockOpname::findOrFail($id)->delete();
-        StockOpnameItem::findOrFail($id)->delete();
+        $so = StockOpname::findOrFail($id);
+        if($so->exists){
+            $so->delete();
+            $this->reverseStock($id);
+            StockOpnameItem::where(['so_id' => $id])->delete();
+        }
         session()->flash('success', 'Stock Opname berhasil dihapus.');
     }
 
@@ -57,7 +62,7 @@ class Index extends Component
         if ($this->newStatus === 'approved') {
             $data['status'] = $this->newStatus;
             //calculate stock
-
+            $this->calculateStock($this->changingStatusSo?->id);
         }
 
         $this->changingStatusSo->update($data);
@@ -66,10 +71,27 @@ class Index extends Component
     }
 
     public function calculateStock($id){
-        $data = StockOpnameItem::where(['so_id', $id])->get();
-        foreach ($data as $i => $item) {
-            //
-        }
+        $data = StockOpnameItem::where(['so_id' => $id])->get();
+        DB::transaction(function () use ($data) {
+            foreach ($data as $item) {
+                Inventory::where(['id' => $item->inventory_id])->update([
+                    'store_stock' => $item->stock_inhouse,
+                    'total_stock' => $item->stock_inhouse
+                ]);
+            }
+        });
+    }
+
+    public function reverseStock($id){
+        $data = StockOpnameItem::where(['so_id' => $id])->get();
+        DB::transaction(function () use ($data) {
+            foreach ($data as $item) {
+                Inventory::where(['id' => $item->inventory_id])->update([
+                    'store_stock' =>  $item->stock_system,
+                    'total_stock' => $item->stock_system
+                ]);
+            }
+        });
     }
 
     public function render()

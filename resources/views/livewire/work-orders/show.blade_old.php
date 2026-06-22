@@ -1,37 +1,38 @@
 <div class="space-y-6">
     @php
         $statusColors = [
-            'READY_TO_SHIP' => 'bg-muted text-muted-foreground',
+            'draft' => 'bg-muted text-muted-foreground',
             'confirmed' => 'bg-blue-500/15 text-blue-400',
-            'TO_CONFIRM_RECEIVE' => 'bg-yellow-500/15 text-yellow-400',
-            'SHIPPED' => 'bg-green-500/15 text-green-400',
+            'in_progress' => 'bg-yellow-500/15 text-yellow-400',
+            'completed' => 'bg-green-500/15 text-green-400',
             'invoiced' => 'bg-purple-500/15 text-purple-400',
-            'CANCELLED' => 'bg-red-500/15 text-red-400',
+            'cancelled' => 'bg-red-500/15 text-red-400',
         ];
     @endphp
 
-    <x-page-header :title="$workOrder->order_sn" :description="$workOrder->flag . ' • ' . ('-')">
+    <x-page-header :title="$workOrder->title"
+                   :description="$workOrder->wo_number . ' • ' . ($workOrder->client?->name ?? '-')">
         <a wire:navigate href="{{ route('work-orders.index') }}"
            class="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-accent">
             <x-icon name="arrow-left" class="size-4" /> Kembali
         </a>
-        {{-- @if (in_array($workOrder->status, ['draft', 'confirmed']))
+        @if (in_array($workOrder->status, ['draft', 'confirmed']))
             <a wire:navigate href="{{ route('work-orders.edit', $workOrder) }}"
                class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                 <x-icon name="pencil" class="size-4" /> Edit
             </a>
-        @endif --}}
+        @endif
     </x-page-header>
 
     <div class="flex items-center gap-3">
-        <span class="inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium {{ $statusColors[$workOrder->order_status] ?? 'bg-muted' }}">
-            {{ str_replace('_', ' ', $workOrder->order_status) }}
+        <span class="inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium {{ $statusColors[$workOrder->status] ?? 'bg-muted' }}">
+            {{ str_replace('_', ' ', $workOrder->status) }}
         </span>
-        {{-- @if ($workOrder->priority)
+        @if ($workOrder->priority)
             <span class="inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium">
                 {{ $workOrder->priority }}
             </span>
-        @endif --}}
+        @endif
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">

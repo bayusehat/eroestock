@@ -30,4 +30,8 @@ class Format
 
         return Carbon::parse($date)->translatedFormat('d M Y H:i');
     }
+
+    public static function parseData($response){
+        return json_decode(json_encode($response, true), true);
+    }
 }
