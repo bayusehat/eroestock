@@ -3,25 +3,26 @@
 namespace App\Livewire\WorkOrders;
 
 use App\Models\WorkOrder;
+use App\Models\ShopeeOrder;
 use Livewire\Component;
 
 class Show extends Component
 {
-    public WorkOrder $workOrder;
+    public ShopeeOrder $workOrder;
 
-    public function mount(WorkOrder $workOrder): void
+    public function mount(ShopeeOrder $workOrder): void
     {
-        $this->workOrder = $workOrder->load(['client', 'items']);
+        $this->workOrder = $workOrder->load(['details']);
     }
 
-    public function updateStatus(string $status): void
-    {
-        $data = ['status' => $status];
-        if ($status === 'completed') $data['completed_date'] = now();
-        $this->workOrder->update($data);
-        $this->workOrder->refresh();
-        session()->flash('success', "Status diperbarui ke {$status}");
-    }
+    // public function updateStatus(string $status): void
+    // {
+    //     $data = ['status' => $status];
+    //     if ($status === 'completed') $data['completed_date'] = now();
+    //     $this->workOrder->update($data);
+    //     $this->workOrder->refresh();
+    //     session()->flash('success', "Status diperbarui ke {$status}");
+    // }
 
     public function render()
     {

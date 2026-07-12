@@ -8,18 +8,24 @@
         <x-stat-card title="Saldo Kas" :value="App\Helpers\Format::currency($cashBalance)" icon="wallet" />
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2">
-        <div class="rounded-lg border bg-card p-6 shadow-sm">
+    <div class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-lg border bg-card p-4 shadow-sm">
             <h3 class="flex items-center gap-2 text-base font-semibold">
                 <x-icon name="receipt" class="size-4" /> Piutang
             </h3>
             <p class="mt-2 text-2xl font-bold">{{ App\Helpers\Format::currency($outstandingReceivables) }}</p>
         </div>
-        <div class="rounded-lg border bg-card p-6 shadow-sm">
+        <div class="rounded-lg border bg-card p-4 shadow-sm">
             <h3 class="flex items-center gap-2 text-base font-semibold">
                 <x-icon name="credit-card" class="size-4" /> Utang
             </h3>
             <p class="mt-2 text-2xl font-bold">{{ App\Helpers\Format::currency($outstandingPayables) }}</p>
+        </div>
+        <div class="rounded-lg border bg-card p-4 shadow-sm">
+            <h3 class="flex items-center gap-2 text-base font-semibold">
+                <x-icon name="receipt" class="size-4" /> Potential Profit & Loss
+            </h3>
+            <p class="mt-2 text-2xl font-bold">{{ App\Helpers\Format::currency($potentialPl) }}</p>
         </div>
     </div>
 

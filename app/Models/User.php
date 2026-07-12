@@ -64,4 +64,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(StockOpname::class, 'so_by', 'id');
     }
+
+    /**
+     * Get the tiktokToken that owns the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function tiktokToken(): BelongsTo
+    {
+        return $this->belongsTo(TiktokToken::class, 'user_id');
+    }
 }

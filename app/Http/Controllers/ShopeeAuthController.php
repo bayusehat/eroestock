@@ -90,7 +90,7 @@ class ShopeeAuthController extends Controller
                 ->with('success', 'Berhasil terhubung dengan Shopee!');
 
         } catch (\Exception $e) {
-            return redirect()->route('shopee.connect')
+            return redirect()->back()
                 ->with('error', 'Gagal autentikasi Shopee: ' . $e->getMessage());
         }
     }

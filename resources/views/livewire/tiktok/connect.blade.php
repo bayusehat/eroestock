@@ -17,7 +17,7 @@
 
             <p class="text-gray-600 mb-6">
                 Halo <strong>{{ Auth::user()->name }}</strong>!<br>
-                Hubungkan akun Shopee Anda untuk memulai.
+                Hubungkan akun TikTok Anda untuk memulai.
             </p>
 
             @if(session('error'))
@@ -26,8 +26,8 @@
                 </div>
             @endif
 
-            <a href="{{ route('tiktok.redirect') }}"
-               class="inline-flex items-center justify-center w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition duration-200">
+            <a href="{{ route('tiktok.authorize') }}"
+               class="inline-flex items-center justify-center w-full px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg transition duration-200">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 13c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z"/>
                 </svg>

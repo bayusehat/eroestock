@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "34a6cbf992ac5d01ec46a4838074087d",
+    "content-hash": "deef2f785e87bd8481f0bf6f36834190",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -1501,6 +1501,77 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "laraditz/tiktok",
+            "version": "1.1.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laraditz/tiktok.git",
+                "reference": "7d65ac54a5fe0de172fdff926abb88786e762a41"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laraditz/tiktok/zipball/7d65ac54a5fe0de172fdff926abb88786e762a41",
+                "reference": "7d65ac54a5fe0de172fdff926abb88786e762a41",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "TikTok": "Laraditz\\TikTok\\Facades\\TikTok"
+                    },
+                    "providers": [
+                        "Laraditz\\TikTok\\TikTokServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Laraditz\\TikTok\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raditz Farhan",
+                    "email": "raditzfarhan@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Laravel package for interacting with TikTok API.",
+            "homepage": "https://github.com/laraditz/tiktok",
+            "keywords": [
+                "TikTok ",
+                "laraditz"
+            ],
+            "support": {
+                "issues": "https://github.com/laraditz/tiktok/issues",
+                "source": "https://github.com/laraditz/tiktok/tree/1.1.5"
+            },
+            "funding": [
+                {
+                    "url": "https://www.buymeacoffee.com/raditzfarhan",
+                    "type": "buy_me_a_coffee"
+                },
+                {
+                    "url": "https://github.com/raditzfarhan",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-06-15T01:48:26+00:00"
         },
         {
             "name": "laravel/framework",

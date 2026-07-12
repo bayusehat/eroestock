@@ -6,6 +6,8 @@ use App\Models\Account;
 use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Models\WorkOrder;
+use App\Models\ShopeeOrder;
+use App\Models\ShopeeOrderDetail;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -43,6 +45,10 @@ class Dashboard extends Component
             ->pluck('count', 'status')
             ->toArray();
 
+        $potentialPl = ShopeeOrderDetail::whereHas('order', function($q){
+            $q->where('order_status', '<>', 'CANCELLED');
+        })->sum('model_original_price');
+
         return view('livewire.dashboard', [
             'revenueMtd' => $revenueMtd,
             'expensesMtd' => $expensesMtd,
@@ -50,6 +56,7 @@ class Dashboard extends Component
             'cashBalance' => $cashBalance,
             'outstandingReceivables' => $outstandingReceivables,
             'outstandingPayables' => 0,
+            'potentialPl' => $potentialPl,
             'recentTransactions' => $recentTransactions,
             'workOrderPipeline' => $workOrderPipeline,
         ]);

@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ShopeeAuthController;
-use App\Http\Controllers\TikTokShopController;
+use App\Http\Controllers\TiktokShopController;
 use App\Livewire\Dashboard;
 use App\Livewire\Reports\BalanceSheet;
 use App\Livewire\Reports\CashFlow;
@@ -142,9 +142,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/callback', [ShopeeAuthController::class, 'handleShopeeCallback'])->name('callback');
         Route::get('/refresh/{userId}/{shopId}', [ShopeeAuthController::class, 'refreshToken'])->name('refresh');
     });
-
-    Route::get('/tiktok/authorize', [TikTokShopController::class, 'redirectToAuthorize']);
-    Route::get('/tiktok/callback',  [TikTokShopController::class, 'handleCallback']);
+    Route::prefix('tiktok')->name('tiktok.')->group(function () {
+        Route::get('/connect', [TiktokShopController::class, 'showConnect'])->name('connect');
+        Route::get('/authorize', [TiktokShopController::class, 'redirectToAuthorize'])->name('authorize');
+        Route::get('/callback',  [TiktokShopController::class, 'handleCallback'])->name('callback');
+        Route::get('/refresh', [TiktokShopController::class, 'refreshToken'])->name('refresh');
+    });
 
     // Stock Opname
     Route::get('/stock-opname', App\Livewire\StockOpname\Index::class)->name('stock-opname.index');

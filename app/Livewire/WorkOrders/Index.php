@@ -4,6 +4,7 @@ namespace App\Livewire\WorkOrders;
 
 use App\Models\Client;
 use App\Models\WorkOrder;
+use App\Models\Inventory;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithoutUrlPagination;
@@ -22,6 +23,9 @@ class Index extends Component
     public string $search = '';
     public string $statusFilter = '';
     public string $clientFilter = '';
+    public string $dateFrom = '';
+    public string $dateTo = '';
+    public string $activeTab = 'shopee';
     public ?WorkOrder $changingStatusWo = null;
     public string $newStatus = '';
     public array $sn = [];
@@ -31,6 +35,11 @@ class Index extends Component
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingStatusFilter(): void { $this->resetPage(); }
     public function updatingClientFilter(): void { $this->resetPage(); }
+
+    public function setTab(string $tabName): void
+    {
+        $this->activeTab = $tabName;
+    }
 
     public function openStatusModal(int $id): void
     {
@@ -108,7 +117,7 @@ class Index extends Component
         $token = ShopeeToken::where(['user_id' => auth()->id()])->first();
         $params = [
             'order_sn_list' =>  implode(',', $order_sn),
-            'response_optional_fields' => 'item_list,total_amount'
+            'response_optional_fields' => 'item_list,total_amount,package_list,buyer_username'
         ];
 
         $response = Shoapi::call('order')
@@ -141,7 +150,10 @@ class Index extends Component
                     'cod' =>  $order_list['cod'],
                     'message_to_seller' => $order_list['message_to_seller'],
                     'total_amount' => $order_list['total_amount'],
-                    'flag' => 'shopee'
+                    'flag' => 'shopee',
+                    'buyer_username' => $order_list['buyer_username'],
+                    'package_number' => $order_list['package_list'][0]['package_number'],
+                    'shipping_carrier' => $order_list['package_list'][0]['shipping_carrier']
                 ];
 
                 $order = ShopeeOrder::updateOrCreate([
@@ -183,6 +195,7 @@ class Index extends Component
 
     public function render()
     {
+        //Shopee
         $query = ShopeeOrder::query();
 
         if ($this->search) {
@@ -190,36 +203,38 @@ class Index extends Component
             $query->where(fn ($q) => $q->where('order_sn', 'like', "%{$s}%")->orWhere('total_amount', 'like', "%{$s}%"));
         }
         if ($this->statusFilter) $query->where('order_status', $this->statusFilter);
-        // if ($this->clientFilter) $query->where('client_id', $this->clientFilter);
+
+        if($this->dateFrom && $this->dateTo){
+            $query->whereBetween(
+                 DB::raw('DATE(FROM_UNIXTIME(create_time))'),
+                    [$this->dateFrom, $this->dateTo]
+                );
+        }
+
+        //Offline
+        $offline = WorkOrder::query();
+
+        if ($this->search) {
+            $s = $this->search;
+            $offline->where(fn ($q) => $q->where('wo_number', 'like', "%{$s}%")->orWhere('description', 'like', "%{$s}%"));
+        }
+
+        if ($this->statusFilter) $query->where('status', $this->statusFilter);
+
+        if($this->dateFrom && $this->dateTo){
+            $offline->whereBetween(
+                DB::raw('DATE(created_at)'),
+                    [$this->dateFrom, $this->dateTo]
+            );
+        }
 
         return view('livewire.work-orders.index', [
-            'workOrders' => $query->latest('create_time')->paginate(25),
+            'workOrders' => $query->latest('create_time')->paginate(50),
+            'offline' => $offline->latest('created_at')->paginate(50),
             'transitions' => [
                 'SHIPPED' => ['TO_CONFIRM_RECEIVE', 'CANCELLED'],
                 'TO_CONFIRM_RECEIVE' => ['SHIPPED', 'CANCELLED']
             ],
         ]);
     }
-    // public function render()
-    // {
-    //     $query = WorkOrder::query()->with('client:id,name');
-
-    //     if ($this->search) {
-    //         $s = $this->search;
-    //         $query->where(fn ($q) => $q->where('wo_number', 'like', "%{$s}%")->orWhere('title', 'like', "%{$s}%"));
-    //     }
-    //     if ($this->statusFilter) $query->where('status', $this->statusFilter);
-    //     if ($this->clientFilter) $query->where('client_id', $this->clientFilter);
-
-    //     return view('livewire.work-orders.index', [
-    //         'workOrders' => $query->latest('order_date')->paginate(25),
-    //         'clients' => Client::orderBy('name')->get(['id','name']),
-    //         'transitions' => [
-    //             'draft' => ['confirmed', 'cancelled'],
-    //             'confirmed' => ['in_progress', 'cancelled'],
-    //             'in_progress' => ['completed', 'cancelled'],
-    //             'completed' => ['invoiced'],
-    //         ],
-    //     ]);
-    // }
 }

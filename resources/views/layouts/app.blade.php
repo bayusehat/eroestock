@@ -176,13 +176,29 @@
                 </nav>
                 <div class="ml-auto flex items-center gap-2">
                     <div class="-mx-1 my-1 h-px bg-border"></div>
-                    <a href="#" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-cyan-100 hover:bg-cyan/10 hover:text-syan-900"><x-icon name="music" class="size-4" target="_blank" /> Connect TikTok</a>
                     @php
                         $userId = auth()->id();
+                        $tokenTiktok = \App\Models\TiktokToken::where('user_id', $userId)
+                        ->first();
+
+                        if($tokenTiktok?->isExpired() || $tokenTiktok == null){
+                            $classTiktok = '';
+                        }else{
+                            $classTiktok = 'pointer-events-none cursor-default';
+                        }
+                    @endphp
+                    <a href="{{route('tiktok.connect')}}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-cyan-100 hover:bg-cyan/10 hover:text-cyan-900 text-nowrap {{$classTiktok}}" target="_blank"><x-icon name="music" class="size-4" /> {{ !$tokenTiktok?->isExpired() && $tokenTiktok != null ? 'Tiktok Connected' : 'Connect Tiktok' }}</a>
+                    @if ($tokenTiktok?->isExpired() && $tokenTiktok != null)
+                        <a href="{{ route('tiktok.refresh',['userId' => auth()->id(),'openId' => $tokenTiktok->open_id])}}">
+                            <x-icon name="refresh-cw" class="size-4" />
+                        </a>
+                    @endif
+                    @php
+                        // $userId = auth()->id();
                         $token = \App\Models\ShopeeToken::where('user_id', $userId)
                         ->first();
 
-                        if($token->isExpired()){
+                        if($token?->isExpired() || $token == null){
                             $classShopee = '';
                         }else{
                             $classShopee = 'pointer-events-none cursor-default';
@@ -190,13 +206,13 @@
                     @endphp
                     <a href="{{ route('shopee.connect') }}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-orange-100 hover:bg-orange/10 hover:text-orange-900 text-nowrap {{$classShopee}}" target="_blank"><x-icon name="hand-bag" class="size-4" />
 
-                        {{ !$token->isExpired() ? 'Shopee Connected' : 'Connect Shopee' }}
+                        {{ !$token?->isExpired() && $token != null ? 'Shopee Connected' : 'Connect Shopee' }}
                     </a>
-                    @if ($token->isExpired())
+                    @if ($token?->isExpired() && $token != null)
                         <a href="{{ route('shopee.refresh',['userId' => auth()->id(),'shopId' => $token->shop_id])}}">
                             <x-icon name="refresh-cw" class="size-4" />
                         </a>
-                        @endif
+                    @endif
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
