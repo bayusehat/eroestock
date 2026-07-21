@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Inventory extends Model
 {
@@ -32,6 +33,8 @@ class Inventory extends Model
      * @var bool
      */
     public $timestamps = true;
+
+    protected $appends = ['name_size']; // Automatically embeds this attribute into JSON responses
 
     /**
      * Get the item that owns the Inventory
@@ -71,5 +74,10 @@ class Inventory extends Model
     public function stock_opname_item(): HasMany
     {
         return $this->hasMany(StockOpnameItem::class, 'inventory_id');
+    }
+
+    public function nameSize(): Attribute
+    {
+        return Attribute::get(fn () => ($this->item->name ?? 'N/A') ." - {$this->size}");
     }
 }

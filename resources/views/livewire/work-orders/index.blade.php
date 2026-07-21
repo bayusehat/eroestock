@@ -207,8 +207,8 @@
             <thead>
                 <tr class="border-b bg-muted/50 text-left text-muted-foreground">
                     <th class="px-4 py-3 font-medium">Order Number</th>
-                    <th class="px-4 py-3 font-medium">Client</th>
-                    <th class="px-4 py-3 font-medium">Judul</th>
+                    <th class="px-4 py-3 font-medium">Customer</th>
+                    <th class="px-4 py-3 font-medium">Deskripsi</th>
                     <th class="px-4 py-3 font-medium">Priority</th>
                     <th class="px-4 py-3 font-medium">Status</th>
                     <th class="px-4 py-3 font-medium">Order Date</th>
@@ -236,13 +236,13 @@
                         ];
                     @endphp
                     <tr class="border-b hover:bg-muted/30 transition-colors">
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-nowrap">
                             <a wire:navigate href="{{ route('work-orders.show', $wo) }}" class="font-medium text-primary hover:underline">
                                 {{ $wo->wo_number }}
                             </a>
                         </td>
-                        <td class="px-4 py-3">{{ $wo->client?->name ?? '-' }}</td>
-                        <td class="px-4 py-3 max-w-[200px] truncate">{{ $wo->title }}</td>
+                        <td class="px-4 py-3">{{ $wo->client_work_order_id ?? '-' }}</td>
+                        <td class="px-4 py-3 text-nowrap">{{ $wo->description }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium {{ $priorityColors[$wo->priority ?? 'medium'] ?? 'bg-muted' }}">
                                 {{ $wo->priority ?? '-' }}

@@ -42,7 +42,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($workOrders as $wo)
+                @forelse ($offline as $wo)
                     @php
                         $statusColors = [
                             'draft' => 'bg-muted text-muted-foreground',
@@ -151,7 +151,7 @@
             </tbody>
         </table>
     </div>
-    <div>{{ $workOrders->links() }}</div>
+    <div>{{ $offline->links() }}</div>
 
     {{-- Change Status Modal --}}
     @if ($changingStatusWo)

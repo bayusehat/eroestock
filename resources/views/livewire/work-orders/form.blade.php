@@ -11,23 +11,24 @@
                         <h3 class="font-semibold">Order Details</h3>
                     </div>
                     <div class="space-y-4 p-4">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="space-y-1.5">
+                        {{-- <div class="grid gap-4 sm:grid-cols-2"> --}}
+                            {{-- <div class="space-y-1.5">
                                 <label class="text-sm font-medium">Customer <span class="text-destructive">*</span></label>
                                 <x-select wire:model="client_id" placeholder="Pilih customer..." :searchable="true" :options="$clients->pluck('name', 'id')->toArray()" />
-                            </div>
-                            <div class="space-y-1.5">
-                                <label class="text-sm font-medium">Client WO ID</label>
-                                <input wire:model="client_work_order_id" type="text" placeholder="e.g. PO-2026-001"
-                                       class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
-                            </div>
-                        </div>
+                            </div> --}}
+
+                        {{-- </div> --}}
                         <div class="space-y-1.5">
+                            <label class="text-sm font-medium">Nama Customer</label>
+                            <input wire:model="client_work_order_id" type="text" placeholder="e.g. John Doe"
+                                    class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+                        </div>
+                        {{-- <div class="space-y-1.5">
                             <label class="text-sm font-medium">Judul <span class="text-destructive">*</span></label>
                             <input wire:model="title" type="text"
                                    class="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring @error('title') border-destructive @enderror" />
                             @error('title') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
-                        </div>
+                        </div> --}}
                         <div class="space-y-1.5">
                             <label class="text-sm font-medium">Deskripsi</label>
                             <textarea wire:model="description" rows="3"
@@ -71,7 +72,7 @@
                     </div>
                     <div class="space-y-4 p-4">
                         @foreach ($items as $i => $item)
-                            <div class="rounded-lg border p-4 space-y-3">
+                            <div class="rounded-lg border p-4 space-y-3" wire:key="item-{{ $i }}">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-medium text-muted-foreground">Item {{ $i + 1 }}</span>
                                     <button type="button" wire:click="removeItem({{ $i }})"
@@ -86,7 +87,7 @@
                                            class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" /> --}}
                                     <label class="text-xs font-medium">Pilih Item / SKU<span class="text-destructive">*</span></label>
                                     <x-select wire:model.live="items.{{ $i }}.inventory_id" placeholder="Pilih Item..." :searchable="true"
-                                        :options="collect($inventoryItem[0])->pluck('sku','id')->toArray()" option-value="id" option-label="sku" />
+                                        :options="collect($inventoryItem[0])->pluck('name_size','id')->toArray()" option-value="id" option-label="name_size" />
                                     @error('items.'.$i.'.inventory_id') <p class="text-xs text-destructive">{{ $message }}</p> @enderror
                                 </div>
                                 <div class="grid grid-cols-3 gap-3">

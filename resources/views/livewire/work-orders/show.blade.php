@@ -104,7 +104,7 @@
                     @foreach ($workOrder->details as $item)
                         <tr class="border-b">
                             <td class="px-4 py-3">{{ $item->item_name }}</td>
-                            <td class="px-4 py-3">{{ $item->item_sku }}</td>
+                            <td class="px-4 py-3">{{ $item->model_sku }}</td>
                             <td class="px-4 py-3">{{ $item->model_quantity_purchased }}</td>
                             <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency($item->model_original_price) }}</td>
                             <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency(($item->model_original_price * $item->model_quantity_purchased)) }}</td>

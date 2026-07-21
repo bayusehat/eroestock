@@ -28,8 +28,8 @@ class Form extends Component
     protected function rules(): array
     {
         return [
-            'client_id' => ['required'],
-            'title' => ['required', 'string', 'max:255'],
+            // 'client_id' => ['required'],
+            'client_work_order_id' => ['required'],
             'order_date' => ['required', 'date'],
             'category' => ['required'],
             'items' => ['required', 'array', 'min:1'],
@@ -45,12 +45,12 @@ class Form extends Component
     {
         $this->workOrder = $workOrder;
         $this->order_date = now()->format('Y-m-d');
-        $this->inventoryItem[] = Inventory::all();
+        $this->inventoryItem[] = Inventory::with('item')->get();
 
         if ($workOrder && $workOrder->exists) {
-            $this->client_id = $workOrder->client_id;
+            $this->client_id = 0;
             $this->client_work_order_id = $workOrder->client_work_order_id ?? '';
-            $this->title = $workOrder->title;
+            $this->title = $workOrder->title ?? '';
             $this->description = $workOrder->description ?? '';
             $this->category = $workOrder->category ?? '';
             $this->priority = $workOrder->priority ?? 'medium';
@@ -72,6 +72,19 @@ class Form extends Component
     public function addItem(): void
     {
         $this->items[] = ['id' => '', 'inventory_id' => '', 'quantity' => 1, 'unit' => 'pcs', 'unit_price' => 0, 'discount' => 0, 'tax_rate' => 0];
+    }
+
+    public function updatedItems($value, $key)
+    {
+        // $key will look like "0.product_id"
+        // We can check if the changed key ends with product_id
+        if (str_ends_with($key, '.inventory_id')) {
+            $index = explode('.', $key)[0]; // Extract the index (0)
+
+            // Fetch the related value and update the price within the same index
+            $product = Inventory::with('item')->find($value);
+            $this->items[$index]['unit_price'] = $product ? $product->item->sell_price : 0;
+        }
     }
 
     public function removeItem(int $index): void
@@ -111,7 +124,7 @@ class Form extends Component
             $data = [
                 'client_id' => $this->client_id ?: null,
                 'client_work_order_id' => $this->client_work_order_id ?: null,
-                'title' => $this->title,
+                'title' => $this->title ?: '-',
                 'description' => $this->description ?: null,
                 'category' => $this->category ?: null,
                 'priority' => $this->priority,
@@ -122,7 +135,6 @@ class Form extends Component
 
             if ($this->workOrder && $this->workOrder->exists) {
                 $this->workOrder->update($data);
-                // $this->workOrder->items()->delete();
             } else {
                 $data['wo_number'] = GeneratesNumber::generateNumber('OD', 'work_orders', 'wo_number', 'Y');
                 $data['status'] = 'draft';

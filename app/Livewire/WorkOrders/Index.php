@@ -165,7 +165,7 @@ class Index extends Component
                 if($order->id){
                     if(!empty($order_list['item_list'])){
                         foreach($order_list['item_list'] as $detail){
-                            ShopeeOrderDetail::updateOrCreate([
+                            $child = ShopeeOrderDetail::updateOrCreate([
                                 'shopee_order_id' => $order->id,
                                 'item_id' => $detail['item_id'],
                             ],[
@@ -183,6 +183,23 @@ class Index extends Component
                                 'model_quantity_purchased' => $detail['model_quantity_purchased'],
                                 'model_sku' => $detail['model_sku']
                             ]);
+
+                            if($child->wasRecentlyCreated) {
+                                $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
+                                if($parent->order_status == 'READY_TO_SHIP'){
+                                    Inventory::where([
+                                        'sku' => $child->model_sku
+                                    ])->decrement('store_stock', (int) $child->model_quantity_purchased);
+
+                                }
+                            }else{
+                                $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
+                                if($parent->order_status == 'CANCELLED'){
+                                    Inventory::where([
+                                        'sku' => $child->model_sku
+                                    ])->increment('store_stock', (int) $child->model_quantity_purchased);
+                                }
+                            }
                         }
                     }
                 }
@@ -191,7 +208,6 @@ class Index extends Component
 
         return true;
     }
-
 
     public function render()
     {
