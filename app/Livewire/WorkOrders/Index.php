@@ -14,6 +14,9 @@ use App\Models\ShopeeOrder;
 use App\Models\ShopeeOrderDetail;
 use Carbon\Carbon;
 use App\Helpers\Format;
+use App\Models\Account;
+use App\Models\Transaction;
+use App\Traits\GeneratesNumber;
 use DB;
 
 class Index extends Component
@@ -137,6 +140,34 @@ class Index extends Component
         }
     }
 
+    public function getEscrowDetail($order){
+        $token = ShopeeToken::where(['user_id' => auth()->id()])->first();
+        $params = [
+            'order_sn' =>  $order->order_sn
+        ];
+
+        $response = Shoapi::call('payment')
+                ->access('get_escrow_detail', $token->access_token)
+                ->shop($token->shop_id)
+                ->request($params)
+                ->response();
+
+        $response = Format::parseData($response);
+
+        if($response['api_status'] == 'success'){
+            //update escrow detail in shopee order
+            ShopeeOrder::where('id',$order->id)->update([
+                'escrow_amount' => $response['order_income']['escrow_amount'] ?? 0,
+                'actual_shipping_fee' => $response['order_income']['actual_shipping_fee'] ?? 0,
+                'buyer_transaction_fee' => $response['order_income']['buyer_transaction_fee'] ?? 0,
+                'withholding_tax' => $response['order_income']['withholding_tax'] ?? 0
+            ]);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
     public function dumpOrder($response){
         DB::transaction(function () use ($response){
            foreach ($response['order_list'] as $order_list) {
@@ -149,6 +180,10 @@ class Index extends Component
                     'ship_by_date' => $order_list['ship_by_date'],
                     'cod' =>  $order_list['cod'],
                     'message_to_seller' => $order_list['message_to_seller'],
+                    'escrow_amount' => 0,
+                    'actual_shipping_fee' => 0,
+                    'buyer_transaction_fee' => 0,
+                    'withholding_tax' => 0,
                     'total_amount' => $order_list['total_amount'],
                     'flag' => 'shopee',
                     'buyer_username' => $order_list['buyer_username'],
@@ -183,6 +218,8 @@ class Index extends Component
                                 'model_quantity_purchased' => $detail['model_quantity_purchased'],
                                 'model_sku' => $detail['model_sku']
                             ]);
+                            //get payment details
+                            $this->getEscrowDetail($order);
 
                             if($child->wasRecentlyCreated) {
                                 $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
@@ -192,12 +229,17 @@ class Index extends Component
                                     ])->decrement('store_stock', (int) $child->model_quantity_purchased);
 
                                 }
-                            }else{
+                            }
+                            if (!$child->wasRecentlyCreated && $order->wasChanged('order_status')) {
                                 $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
                                 if($parent->order_status == 'CANCELLED'){
                                     Inventory::where([
                                         'sku' => $child->model_sku
                                     ])->increment('store_stock', (int) $child->model_quantity_purchased);
+                                }
+
+                                if($parent->order_status == 'COMPLETED'){
+                                    $this->addToTransactions($parent);
                                 }
                             }
                         }
@@ -207,6 +249,16 @@ class Index extends Component
         });
 
         return true;
+    }
+
+    public function addToTransactions($order_id){;
+        Transaction::create([
+            'transaction_no' => GeneratesNumber::generateNumber('TXN', 'transactions', 'transaction_no', 'Y'),
+            'type' => 'income', 'date' => Carbon::now()->toDateString(), 'amount' => $order_id->escrow_amount,
+            'account_id' => 4, 'contra_account_id' => 22,
+            'description' => 'Shopee Order '.$order_id->order_sn ?: null, 'reference_no' => $order_id->order_sn ?: null,
+            'payment_method' => 'bank_transfer' ?: null, 'category' => '-' ?: null, 'created_by' => auth()->id()
+        ]);
     }
 
     public function render()

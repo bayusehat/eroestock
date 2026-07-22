@@ -28,7 +28,7 @@ class Form extends Component
             'items.*.sku' => ['required', 'string'],
             'items.*.color' => ['required'],
             'items.*.size' => ['required', 'numeric', 'min:1'],
-            'items.*.store_stock' => ['required', 'numeric', 'min:1'],
+            'items.*.store_stock' => ['required', 'numeric', 'min:0'],
         ];
     }
 

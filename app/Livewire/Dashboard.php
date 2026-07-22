@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Account;
 use App\Models\Invoice;
+use App\Models\Inventory;
 use App\Models\Transaction;
 use App\Models\WorkOrder;
 use App\Models\ShopeeOrder;
@@ -49,6 +50,13 @@ class Dashboard extends Component
             $q->where('order_status', '<>', 'CANCELLED');
         })->sum('model_original_price');
 
+        $totalAssets = DB::select("SELECT SUM(total_assets) total FROM (
+  SELECT id_item, (grand_stock * margin) profit, (grand_stock * buy_price) total_assets from (
+    SELECT a.id_item, sum(store_stock) grand_stock,SUM(b.sell_price - b.buy_price) margin, buy_price FROM inventories a left join items b on a.id_item = b.id
+    GROUP BY a.id_item, buy_price
+    ORDER BY a.id_item
+  ) a
+) b");
         return view('livewire.dashboard', [
             'revenueMtd' => $revenueMtd,
             'expensesMtd' => $expensesMtd,
@@ -57,6 +65,7 @@ class Dashboard extends Component
             'outstandingReceivables' => $outstandingReceivables,
             'outstandingPayables' => 0,
             'potentialPl' => $potentialPl,
+            'totalAssets' => $totalAssets[0]->total,
             'recentTransactions' => $recentTransactions,
             'workOrderPipeline' => $workOrderPipeline,
         ]);

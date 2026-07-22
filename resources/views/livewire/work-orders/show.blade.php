@@ -50,12 +50,6 @@
                     <p class="text-sm text-muted-foreground">Order Date</p>
                     <p class="font-medium">{{ \Carbon\Carbon::createFromTimestamp($workOrder->create_time)->toDateTimeString() }}</p>
                 </div>
-                {{-- @if ($workOrder->description)
-                    <div class="sm:col-span-2">
-                        <p class="text-sm text-muted-foreground">Deskripsi</p>
-                        <p class="font-medium whitespace-pre-wrap">{{ $workOrder->description }}</p>
-                    </div>
-                @endif --}}
             </div>
         </div>
 
@@ -66,18 +60,22 @@
                     <span class="text-muted-foreground">Total Amount</span>
                     <span>{{ App\Helpers\Format::currency($workOrder->total_amount) }}</span>
                 </div>
-                {{-- <div class="flex justify-between text-sm">
-                    <span class="text-muted-foreground">Total Discount</span>
-                    <span>{{ App\Helpers\Format::currency($workOrder->total_discount) }}</span>
+                <div class="flex justify-between text-sm">
+                    <span class="text-muted-foreground">Shipping Fee</span>
+                    <span>{{ App\Helpers\Format::currency($workOrder->actual_shipping_fee) }}</span>
                 </div>
                 <div class="flex justify-between text-sm">
-                    <span class="text-muted-foreground">Total Tax</span>
-                    <span>{{ App\Helpers\Format::currency($workOrder->total_tax) }}</span>
+                    <span class="text-muted-foreground"> Transaction Fee</span>
+                    <span>{{ App\Helpers\Format::currency($workOrder->buyer_transaction_fee) }}</span>
                 </div>
-                <div class="flex justify-between border-t pt-2 font-semibold">
-                    <span>Grand Total</span>
-                    <span>{{ App\Helpers\Format::currency($workOrder->grand_total) }}</span>
-                </div> --}}
+                <div class="flex justify-between text-sm">
+                    <span class="text-muted-foreground"> Withholding Tax</span>
+                    <span>{{ App\Helpers\Format::currency($workOrder->withholding_tax) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-muted-foreground"> Nett Income</span>
+                    <span>{{ App\Helpers\Format::currency($workOrder->escrow_amount) }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -94,10 +92,6 @@
                         <th class="px-4 py-3 font-medium">Qty</th>
                         <th class="px-4 py-3 text-right font-medium">Unit Price</th>
                         <th class="px-4 py-3 text-right font-medium">Subtotal</th>
-                        {{-- <th class="px-4 py-3 text-right font-medium">Unit Price</th>
-                        <th class="px-4 py-3 text-right font-medium">Discount</th>
-                        <th class="px-4 py-3 text-right font-medium">Tax %</th>
-                        <th class="px-4 py-3 text-right font-medium">Subtotal</th> --}}
                     </tr>
                 </thead>
                 <tbody>
@@ -114,35 +108,4 @@
             </table>
         </div>
     </div>
-
-    {{-- Actions --}}
-    {{-- @if ($workOrder->status !== 'cancelled' && $workOrder->status !== 'invoiced')
-        <div class="rounded-lg border bg-card shadow-sm">
-            <div class="border-b p-4"><h3 class="font-semibold">Actions</h3></div>
-            <div class="flex flex-wrap gap-2 p-4">
-                @if ($workOrder->status === 'draft')
-                    <button wire:click="updateStatus('confirmed')"
-                            class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                        <x-icon name="check" class="size-4" /> Confirm
-                    </button>
-                @endif
-                @if ($workOrder->status === 'confirmed')
-                    <button wire:click="updateStatus('in_progress')"
-                            class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                        <x-icon name="play" class="size-4" /> Start
-                    </button>
-                @endif
-                @if ($workOrder->status === 'in_progress')
-                    <button wire:click="updateStatus('completed')"
-                            class="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
-                        <x-icon name="check" class="size-4" /> Complete
-                    </button>
-                @endif
-                <button wire:click="updateStatus('cancelled')"
-                        class="inline-flex items-center gap-2 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90">
-                    <x-icon name="x" class="size-4" /> Cancel
-                </button>
-            </div>
-        </div>
-    @endif --}}
 </div>
