@@ -42,4 +42,9 @@ class ShopeeOrder extends Model
     {
         return $this->hasMany(ShopeeOrderDetail::class,'shopee_order_id');
     }
+
+    public function exchange_size(): HasMany
+    {
+        return $this->hasMany(ExchangeSize::class, 'shopee_order_id');
+    }
 }

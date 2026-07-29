@@ -24,6 +24,7 @@ use App\Livewire\WorkOrders\Form;
 use App\Livewire\WorkOrders\Index;
 use App\Livewire\WorkOrders\Show;
 use App\Livewire\WorkOrders\OfflineShow;
+use App\Livewire\WorkOrders\ExchangeSize;
 use App\Livewire\Reports\ItemAsset;
 use Illuminate\Support\Facades\Route;
 
@@ -141,6 +142,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/redirect', [ShopeeAuthController::class, 'redirectToShopee'])->name('redirect');
         Route::get('/callback', [ShopeeAuthController::class, 'handleShopeeCallback'])->name('callback');
         Route::get('/refresh/{userId}/{shopId}', [ShopeeAuthController::class, 'refreshToken'])->name('refresh');
+        Route::get('/exchange/{shopeeOrder}/size',ExchangeSize::class)->name('exchange');
     });
     Route::prefix('tiktok')->name('tiktok.')->group(function () {
         Route::get('/connect', [TiktokShopController::class, 'showConnect'])->name('connect');

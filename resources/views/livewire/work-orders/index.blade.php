@@ -21,7 +21,7 @@
                class="h-9 max-w-xs rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
         <x-select wire:model.live="statusFilter" placeholder="Semua Status"
                   :options="['' => 'Semua Status', 'SHIPPED' => 'Shipped', 'TO_CONFIRM_RECEIVE' => 'To Confirm Recieve', 'CANCELLED' => 'Cancelled', 'READY_TO_SHIP' => 'Ready to Ship','COMPLETED' => 'Completed', 'PROCESSED' => 'Processed']" class="w-44" />
-        <input wire:model.live="dateFrom" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+        <input wire:model.live="dateFrom" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring " />
         <input wire:model.live="dateTo" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
 
     </div>
@@ -69,6 +69,7 @@
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b bg-muted/50 text-left text-muted-foreground">
+                    <th>#</th>
                     <th class="px-4 py-3 font-medium">Order</th>
                     <th class="px-4 py-3 font-medium">Source</th>
                     <th class="px-4 py-3 font-medium">Items</th>
@@ -79,7 +80,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($workOrders as $wo)
+                @forelse ($workOrders as $sp => $wo)
                     @php
                         $statusColors = [
                             'READY_TO_SHIP' => 'bg-muted text-muted-foreground',
@@ -97,6 +98,7 @@
                         ];
                     @endphp
                     <tr class="border-b hover:bg-muted/30 transition-colors">
+                        <td class="px-4 py-3">{{ ++$sp }}</td>
                         <td class="px-4 py-3">
                             <a wire:navigate href="{{ route('work-orders.show', $wo) }}" class="font-medium text-primary hover:underline">
                                 {!! $wo->order_sn .'<br><span class="text-xs text-gray-50">'. $wo->buyer_username.'<br>'.$wo->tracking_number.' - '.$wo->shipping_carrier.'</span>' !!}
@@ -108,12 +110,12 @@
                                 {!! '<span class="text-xs">'.$detail->item_name.' x'.$detail->model_quantity_purchased.'</span><br>' !!}
                             @endforeach
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 text-nowrap">
                             <span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium {{ $statusColors[$wo->order_status] ?? 'bg-muted' }}">
                                 {{ str_replace('_', ' ', $wo->order_status) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">{{ \Carbon\Carbon::createFromTimestamp($wo->create_time)->toDateTimeString() }}</td>
+                        <td class="px-4 py-3 text-nowrap">{{ \Carbon\Carbon::createFromTimestamp($wo->create_time)->toDateTimeString() }}</td>
                         <td class="px-4 py-3 text-right font-medium">{{ App\Helpers\Format::currency($wo->total_amount) }}</td>
                         <td class="px-4 py-3">
                             <div x-data="{
@@ -156,6 +158,10 @@
                                         <a wire:navigate href="{{ route('work-orders.show', $wo) }}"
                                            class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                             <x-icon name="eye" class="size-4" /> View
+                                        </a>
+                                        <a wire:navigate href="{{ route('shopee.exchange', $wo) }}"
+                                           class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
+                                            <x-icon name="refresh-cw" class="size-4" /> Tukar Size
                                         </a>
                                     </div>
                                 </template>

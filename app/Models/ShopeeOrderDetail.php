@@ -42,4 +42,10 @@ class ShopeeOrderDetail extends Model
     {
         return $this->belongsTo(ShopeeOrder::class,'shopee_order_id');
     }
+
+    /**
+     * Get all of the exchange_size for the ShopeeOrderDetail
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
 }

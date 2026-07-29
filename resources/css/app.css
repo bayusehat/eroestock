@@ -5,7 +5,8 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
-@custom-variant dark (&:is(.dark *));
+/* @custom-variant dark (&:is(.dark *)); */
+/* @custom-variant light (&:where(.light, .light *)); */
 
 @theme inline {
     --color-background: var(--background);
