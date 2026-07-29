@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ShopeeToken extends Model
 {
+    use SoftDeletes, HasFactory;
+
     protected $fillable = [
         'user_id', 'shop_id', 'access_token', 'refresh_token',
         'expires_in', 'expires_at', 'shop_info'

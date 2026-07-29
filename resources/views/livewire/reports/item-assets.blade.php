@@ -10,8 +10,8 @@
         ];
     @endphp
 
-    <x-page-header :title="$workOrder->order_sn" :description="$workOrder->flag">
-        <a wire:navigate href="{{ route('work-orders.index') }}"
+    <x-page-header title="List Asset" description="List total worth items">
+        <a wire:navigate href="{{ route('dashboard') }}"
            class="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-accent">
             <x-icon name="arrow-left" class="size-4" /> Kembali
         </a>
@@ -24,9 +24,9 @@
     </x-page-header>
 
     <div class="flex items-center gap-3">
-        <span class="inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium {{ $statusColors[$workOrder->order_status] ?? 'bg-muted' }}">
+        {{-- <span class="inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium {{ $statusColors[$workOrder->order_status] ?? 'bg-muted' }}">
             {{ str_replace('_', ' ', $workOrder->order_status) }}
-        </span>
+        </span> --}}
         {{-- @if ($workOrder->priority)
             <span class="inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium">
                 {{ $workOrder->priority }}
@@ -34,27 +34,19 @@
         @endif --}}
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid gap-6 lg:grid-cols-1">
         <div class="rounded-lg border bg-card shadow-sm">
-            <div class="border-b p-4"><h3 class="font-semibold">Work Order Info</h3></div>
+            <div class="border-b p-4"><h3 class="font-semibold">Info</h3></div>
             <div class="grid gap-4 p-4 sm:grid-cols-2">
-                <div>
-                    <p class="text-sm text-muted-foreground">Buyer</p>
-                    <p class="font-medium">{{ $workOrder->buyer_username ?? '-' }}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-muted-foreground">Logistik & No. Resi</p>
-                    <p class="font-medium">{{ $workOrder->shipping_carrier ?? '-' }} - {{ $workOrder->tracking_number ?? '-' }}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-muted-foreground">Order Date</p>
-                    <p class="font-medium">{{ \Carbon\Carbon::createFromTimestamp($workOrder->create_time)->toDateTimeString() }}</p>
+                <div class="flex justify-between text-sm">
+                    <h3> TOTAL ASSETS</h3>
+                    <h3>{{ App\Helpers\Format::currency($total_asset) }}</h3>
                 </div>
             </div>
         </div>
 
-        <div class="rounded-lg border bg-card shadow-sm">
-            <div class="border-b p-4"><h3 class="font-semibold">Totals</h3></div>
+        {{-- <div class="rounded-lg border bg-card shadow-sm"> --}}
+            {{-- <div class="border-b p-4"><h3 class="font-semibold">Totals</h3></div>
             <div class="space-y-2 p-4">
                 <div class="flex justify-between text-sm">
                     <span class="text-muted-foreground"> Original Price</span>
@@ -86,8 +78,8 @@
                     <span class="text-green-300"><strong>{{ App\Helpers\Format::currency($workOrder->escrow_amount) }}</strong></span>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> --}}
+    {{-- </div> --}}
 
     {{-- Line Items --}}
     <div class="rounded-lg border bg-card shadow-sm">
@@ -96,21 +88,21 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b text-left text-muted-foreground">
+                        <th class="px-4 py-3 font-medium">#</th>
                         <th class="px-4 py-3 font-medium">Item Name</th>
-                        <th class="px-4 py-3 font-medium">Item SKU</th>
-                        <th class="px-4 py-3 font-medium">Qty</th>
-                        <th class="px-4 py-3 text-right font-medium">Unit Price</th>
-                        <th class="px-4 py-3 text-right font-medium">Subtotal</th>
+                        <th class="px-4 py-3 font-medium">Production Worth</th>
+                        <th class="px-4 py-3 font-medium">Selling Worth</th>
+                        <th class="px-4 py-3 text-right font-medium">Nett Worth</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($workOrder->details as $item)
+                    @foreach ($items as $i => $item)
                         <tr class="border-b">
-                            <td class="px-4 py-3">{{ $item->item_name }}</td>
-                            <td class="px-4 py-3">{{ $item->model_sku }}</td>
-                            <td class="px-4 py-3">{{ $item->model_quantity_purchased }}</td>
-                            <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency($item->model_original_price) }}</td>
-                            <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency(($item->model_original_price * $item->model_quantity_purchased)) }}</td>
+                            <td class="px-4 py-3">{{ ++$i }}</td>
+                            <td class="px-4 py-3">{{ $item->name }}</td>
+                            <td class="px-4 py-3">{{ App\Helpers\Format::currency($item->total_hpp) }}</td>
+                            <td class="px-4 py-3">{{ App\Helpers\Format::currency($item->total_asset) }}</td>
+                            <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency($item->nett_worth) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

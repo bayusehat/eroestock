@@ -134,9 +134,10 @@ class Index extends Component
         if($response['api_status'] == 'success'){
             //updateOrCreate Order from Shopee
             $this->dumpOrder($response);
-            return true;
+            session()->flash('success', 'Success get order from Shopee');
+            // return true;
         }else{
-            return false;
+            session()->flash('error', 'Check your connection to Shopee!');
         }
     }
 
@@ -160,7 +161,41 @@ class Index extends Component
                 'escrow_amount' => $response['order_income']['escrow_amount'] ?? 0,
                 'actual_shipping_fee' => $response['order_income']['actual_shipping_fee'] ?? 0,
                 'buyer_transaction_fee' => $response['order_income']['buyer_transaction_fee'] ?? 0,
-                'withholding_tax' => $response['order_income']['withholding_tax'] ?? 0
+                'withholding_tax' => $response['order_income']['withholding_tax'] ?? 0,
+                'original_price' =>  $response['order_income']['original_price'],
+                'service_fee' => $response['order_income']['service_fee'],
+                'order_discounted_price' => $response['order_income']['order_discounted_price'],
+                'voucher_from_shopee' => $response['order_income']['voucher_from_shopee'],
+                'voucher_from_seller' => $response['order_income']['voucher_from_seller'],
+                'buyer_payment_method' => $response['order_income']['buyer_payment_method'],
+                'order_seller_discount' => $response['order_income']['order_seller_discount'],
+                'shopee_voucher' => $response['buyer_payment_info']['shopee_voucher'],
+                'buyer_service_fee' => $response['buyer_payment_info']['buyer_service_fee']
+            ]);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public function getTrackingNumber($order){
+        $token = ShopeeToken::where(['user_id' => auth()->id()])->first();
+        $params = [
+            'order_sn' =>  $order->order_sn
+        ];
+
+        $response = Shoapi::call('logistics')
+                ->access('get_tracking_number', $token->access_token)
+                ->shop($token->shop_id)
+                ->request($params)
+                ->response();
+
+        $response = Format::parseData($response);
+
+        if($response['api_status'] == 'success'){
+            //update tracking number in shopee order
+            ShopeeOrder::where('id',$order->id)->update([
+              'tracking_number' => $response['tracking_number']
             ]);
             return true;
         }else{
@@ -220,6 +255,8 @@ class Index extends Component
                             ]);
                             //get payment details
                             $this->getEscrowDetail($order);
+                            //logistics
+                            $this->getTrackingNumber($order);
 
                             if($child->wasRecentlyCreated) {
                                 $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
@@ -261,6 +298,21 @@ class Index extends Component
         ]);
     }
 
+    public function destroy($id){
+        $workOrder = WorkOrder::find($id);
+        if($workOrder){
+            $workOrder->delete();
+            foreach($workOrder->items as $detail){
+                Inventory::where([
+                    'id' => $detail->inventory_id
+                ])->increment('store_stock', (int) $detail->quantity);
+            }
+            $workOrder->items()->delete();
+            session()->flash('success', 'Order berhasil dihapus.');
+        }
+        session()->flash('error', 'Order gagal dihapus.');
+    }
+
     public function render()
     {
         //Shopee
@@ -287,7 +339,7 @@ class Index extends Component
             $offline->where(fn ($q) => $q->where('wo_number', 'like', "%{$s}%")->orWhere('description', 'like', "%{$s}%"));
         }
 
-        if ($this->statusFilter) $query->where('status', $this->statusFilter);
+        // if ($this->statusFilter) $offline->where('status', $this->statusFilter);
 
         if($this->dateFrom && $this->dateTo){
             $offline->whereBetween(

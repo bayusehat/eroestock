@@ -195,7 +195,7 @@
                     @endif
                     @php
                         // $userId = auth()->id();
-                        $token = \App\Models\ShopeeToken::where('user_id', $userId)
+                        $token = \App\Models\ShopeeToken::where('user_id', $userId)->whereNull('deleted_at')
                         ->first();
 
                         if($token?->isExpired() || $token == null){
@@ -206,7 +206,7 @@
                     @endphp
                     <a href="{{ route('shopee.connect') }}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-orange-100 hover:bg-orange/10 hover:text-orange-900 text-nowrap {{$classShopee}}" target="_blank"><x-icon name="hand-bag" class="size-4" />
 
-                        {{ !$token?->isExpired() && $token != null ? 'Shopee Connected' : 'Connect Shopee' }}
+                        {{ !$token?->isExpired() && $token != null ? 'Shopee Connected' : 'Connect / Refresh Shopee' }}
                     </a>
                     @if ($token?->isExpired() && $token != null)
                         <a href="{{ route('shopee.refresh',['userId' => auth()->id(),'shopId' => $token->shop_id])}}">

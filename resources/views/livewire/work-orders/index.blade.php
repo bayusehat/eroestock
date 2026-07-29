@@ -20,7 +20,7 @@
         <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari Order number atau judul..."
                class="h-9 max-w-xs rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
         <x-select wire:model.live="statusFilter" placeholder="Semua Status"
-                  :options="['' => 'Semua Status', 'SHIPPED' => 'Shiped', 'TO_CONFIRM_RECEIVE' => 'To Confirm Recieve', 'CANCELLED' => 'Cancelled', 'READY_TO_SHIP' => 'Ready to Ship','COMPLETED' => 'Completed']" class="w-44" />
+                  :options="['' => 'Semua Status', 'SHIPPED' => 'Shipped', 'TO_CONFIRM_RECEIVE' => 'To Confirm Recieve', 'CANCELLED' => 'Cancelled', 'READY_TO_SHIP' => 'Ready to Ship','COMPLETED' => 'Completed', 'PROCESSED' => 'Processed']" class="w-44" />
         <input wire:model.live="dateFrom" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
         <input wire:model.live="dateTo" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
 
@@ -74,7 +74,7 @@
                     <th class="px-4 py-3 font-medium">Items</th>
                     <th class="px-4 py-3 font-medium">Status</th>
                     <th class="px-4 py-3 font-medium">Order Date</th>
-                    <th class="px-4 py-3 text-right font-medium">Grand Total</th>
+                    <th class="px-4 py-3 text-right font-medium">Buyer Total Paid</th>
                     <th class="px-4 py-3 font-medium"></th>
                 </tr>
             </thead>
@@ -99,7 +99,7 @@
                     <tr class="border-b hover:bg-muted/30 transition-colors">
                         <td class="px-4 py-3">
                             <a wire:navigate href="{{ route('work-orders.show', $wo) }}" class="font-medium text-primary hover:underline">
-                                {!! $wo->order_sn .'<br><span class="text-xs text-gray-50">'. $wo->buyer_username.'<br>'.$wo->package_number.' - '.$wo->shipping_carrier.'</span>' !!}
+                                {!! $wo->order_sn .'<br><span class="text-xs text-gray-50">'. $wo->buyer_username.'<br>'.$wo->tracking_number.' - '.$wo->shipping_carrier.'</span>' !!}
                             </a>
                         </td>
                         <td class="px-4 py-3">{{ $wo->flag }}</td>
@@ -294,7 +294,7 @@
                                          @click.outside="close()"
                                          x-ref="menu" :style="{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999 }"
                                          class="w-40 origin-top-right rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
-                                        <a wire:navigate href="{{ route('work-orders.show', $wo) }}"
+                                        <a wire:navigate href="{{ route('offline.show', $wo) }}"
                                            class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                             <x-icon name="eye" class="size-4" /> View
                                         </a>
@@ -314,6 +314,10 @@
                                                 <x-icon name="refresh-cw" class="size-4" /> Ubah Status
                                             </button>
                                         @endif
+                                        <button wire:click="destroy({{ $wo->id }})" @click="close()"
+                                                class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
+                                            <x-icon name="trash-2" class="size-4" /> Hapus
+                                        </button>
                                     </div>
                                 </template>
                             </div>
@@ -353,4 +357,12 @@
         </div>
     @endif
     @endif
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            setInterval(() => {
+                @this.call('getOrderShopee');
+                console.log('Get order Shopee ...')
+            }, 120000); // 120000 milliseconds = 2 minutes
+        });
+    </script>
 </div>

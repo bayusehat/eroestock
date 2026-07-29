@@ -43,7 +43,7 @@ class ShopeeAuthController extends Controller
     public function handleShopeeCallback(Request $request)
     {
         $code = $request->get('code');
-        $shopId = $request->get('shop_id');
+        $shopId = $request->has('shop_id') ? $request->get('shop_id') : 0;
 
         if (!$code || !$shopId) {
             return redirect()->route('shopee.connect')

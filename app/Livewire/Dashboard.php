@@ -40,15 +40,13 @@ class Dashboard extends Component
             ->limit(10)
             ->get();
 
-        $workOrderPipeline = WorkOrder::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
+        $workOrderPipeline = ShopeeOrder::select('order_status', DB::raw('count(*) as count'))
+            ->groupBy('order_status')
             ->get()
-            ->pluck('count', 'status')
+            ->pluck('count', 'order_status')
             ->toArray();
 
-        $potentialPl = ShopeeOrderDetail::whereHas('order', function($q){
-            $q->where('order_status', '<>', 'CANCELLED');
-        })->sum('model_original_price');
+        $potentialPl = ShopeeOrder::sum('escrow_amount');
 
         $totalAssets = DB::select("SELECT SUM(total_assets) total FROM (
   SELECT id_item, (grand_stock * margin) profit, (grand_stock * buy_price) total_assets from (

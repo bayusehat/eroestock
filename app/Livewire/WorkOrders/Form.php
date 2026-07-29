@@ -9,6 +9,8 @@ use App\Models\Inventory;
 use App\Traits\GeneratesNumber;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use App\Models\Transaction;
+use Carbon\Carbon;
 
 class Form extends Component
 {
@@ -115,6 +117,16 @@ class Form extends Component
         return $this->subtotal + $this->totalTax;
     }
 
+    public function addToTransactions($order_id){
+        Transaction::create([
+            'transaction_no' => GeneratesNumber::generateNumber('TXN', 'transactions', 'transaction_no', 'Y'),
+            'type' => 'income', 'date' => Carbon::now()->toDateString(), 'amount' => $order_id->grand_total,
+            'account_id' => 4, 'contra_account_id' => 22,
+            'description' => 'Offline Order '.$order_id->wo_number ?: null, 'reference_no' => $order_id->wo_number ?: null,
+            'payment_method' => 'bank_transfer' ?: null, 'category' => '-' ?: null, 'created_by' => auth()->id()
+        ]);
+    }
+
     public function save(): void
     {
         $this->validate();
@@ -154,9 +166,13 @@ class Form extends Component
                     'discount' => $item['discount'] ?? 0, 'tax_rate' => $item['tax_rate'] ?? 0,
                     'subtotal' => $subtotal, 'description' => '-'
                 ]);
+                Inventory::where([
+                    'id' => $item['inventory_id']
+                ])->decrement('store_stock', (int) $item['quantity']);
             }
         });
 
+        $this->addToTransactions($this->workOrder);
         session()->flash('success', 'Order berhasil disimpan.');
         $this->redirect(route('work-orders.index'), navigate: true);
     }

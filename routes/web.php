@@ -23,6 +23,8 @@ use App\Livewire\Settings\TaxRates;
 use App\Livewire\WorkOrders\Form;
 use App\Livewire\WorkOrders\Index;
 use App\Livewire\WorkOrders\Show;
+use App\Livewire\WorkOrders\OfflineShow;
+use App\Livewire\Reports\ItemAsset;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
@@ -39,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/work-orders/create', Form::class)->name('work-orders.create');
     Route::get('/work-orders/{workOrder}', Show::class)->name('work-orders.show');
     Route::get('/work-orders/{workOrder}/edit', Form::class)->name('work-orders.edit');
+    Route::get('/offline/{workOrder}', OfflineShow::class)->name('offline.show');
 
     // Budget Requests
     Route::get('/requests', App\Livewire\Requests\Index::class)->name('requests.index');
@@ -122,6 +125,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/work-order-summary', WorkOrderSummary::class)->name('reports.work-order-summary');
     Route::get('/reports/payroll-summary', PayrollSummary::class)->name('reports.payroll-summary');
     Route::get('/reports/tax-summary', TaxSummary::class)->name('reports.tax-summary');
+    Route::get('/worth', ItemAsset::class)->name('reports.worth');
 
     // Settings
     Route::get('/settings/company', Company::class)->name('settings.company');
@@ -132,10 +136,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings/tax-rates', TaxRates::class)->name('settings.tax-rates');
     Route::get('/settings/audit-logs', AuditLogs::class)->name('settings.audit-logs');
 
-    // Route::prefix('shopee')->name('shopee.')->group(function () {
-    //     Route::get('/auth', [ShopeeAuthController::class, 'redirect'])->name('auth');
-    //     Route::get('/callback', [ShopeeAuthController::class, 'callback'])->name('callback');
-    // });
     Route::prefix('shopee')->name('shopee.')->group(function () {
         Route::get('/connect', [ShopeeAuthController::class, 'showConnect'])->name('connect');
         Route::get('/redirect', [ShopeeAuthController::class, 'redirectToShopee'])->name('redirect');
