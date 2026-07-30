@@ -11,7 +11,7 @@ class ItemAsset extends Component
 {
     public function render()
     {
-        $items = DB::select("select name, sum(buy_price * store_stock) total_hpp, sum(sell_price * store_stock) total_asset, sum((sell_price - buy_price) * store_stock) nett_worth from (
+        $items = DB::select("select name, sum(store_stock) total_stock, sum(buy_price * store_stock) total_hpp, sum(sell_price * store_stock) total_asset, sum((sell_price - buy_price) * store_stock) nett_worth from (
                             select name, buy_price, sell_price, sku, size, store_stock from items a
                                 left join inventories b on a.id = b.id_item
                             ) a

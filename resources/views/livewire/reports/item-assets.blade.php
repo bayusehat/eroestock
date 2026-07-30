@@ -90,6 +90,7 @@
                     <tr class="border-b text-left text-muted-foreground">
                         <th class="px-4 py-3 font-medium">#</th>
                         <th class="px-4 py-3 font-medium">Item Name</th>
+                        <th class="px-4 py-3 font-medium">Total Stock</th>
                         <th class="px-4 py-3 font-medium">Production Worth</th>
                         <th class="px-4 py-3 font-medium">Selling Worth</th>
                         <th class="px-4 py-3 text-right font-medium">Nett Worth</th>
@@ -100,6 +101,7 @@
                         <tr class="border-b">
                             <td class="px-4 py-3">{{ ++$i }}</td>
                             <td class="px-4 py-3">{{ $item->name }}</td>
+                            <td class="px-4 py-3">{{ $item->total_stock }}</td>
                             <td class="px-4 py-3">{{ App\Helpers\Format::currency($item->total_hpp) }}</td>
                             <td class="px-4 py-3">{{ App\Helpers\Format::currency($item->total_asset) }}</td>
                             <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency($item->nett_worth) }}</td>

@@ -20,9 +20,16 @@
         <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari Order number atau judul..."
                class="h-9 max-w-xs rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
         <x-select wire:model.live="statusFilter" placeholder="Semua Status"
-                  :options="['' => 'Semua Status', 'SHIPPED' => 'Shipped', 'TO_CONFIRM_RECEIVE' => 'To Confirm Recieve', 'CANCELLED' => 'Cancelled', 'READY_TO_SHIP' => 'Ready to Ship','COMPLETED' => 'Completed', 'PROCESSED' => 'Processed']" class="w-44" />
-        <input wire:model.live="dateFrom" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring " />
-        <input wire:model.live="dateTo" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
+                  :options="['' => 'Semua Status',
+                  'SHIPPED' => 'Shipped',
+                  'TO_CONFIRM_RECEIVE' => 'To Confirm Recieve',
+                  'CANCELLED' => 'Cancelled',
+                  'READY_TO_SHIP' => 'Ready to Ship',
+                  'COMPLETED' => 'Completed',
+                  'PROCESSED' => 'Processed',
+                  'UNPAID' => 'Unpaid']" class="w-44" />
+        <input wire:model.live="dateFrom" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring [color-scheme:dark]" />
+        <input wire:model.live="dateTo" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring [color-scheme:dark]" />
 
     </div>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -84,12 +91,14 @@
                     @php
                         $statusColors = [
                             'READY_TO_SHIP' => 'bg-muted text-muted-foreground',
-                            'confirmed' => 'bg-blue-500/15 text-blue-400',
+                            'PROCESSED' => 'bg-blue-500/15 text-blue-400',
                             'TO_CONFIRM_RECEIVE' => 'bg-yellow-500/15 text-yellow-400',
                             'COMPLETED' => 'bg-green-500/15 text-green-400',
                             'SHIPPED' => 'bg-purple-500/15 text-purple-400',
                             'CANCELLED' => 'bg-red-500/15 text-red-400',
+                            'UNPAID' => 'bg-orange-500/15 text-orange-400'
                         ];
+
                         $priorityColors = [
                             'low' => 'bg-muted text-muted-foreground',
                             'medium' => 'bg-blue-500/15 text-blue-400',
@@ -371,4 +380,13 @@
             }, 120000); // 120000 milliseconds = 2 minutes
         });
     </script>
+    <div
+        x-data="{ open: false, message: '' }"
+        @notify.window="open = true; message = $event.detail.message; setTimeout(() => open = false, 3000)"
+        x-show="open"
+        class="fixed bottom-5 right-5 bg-blue-600 text-white px-4 py-2 rounded shadow-lg"
+        style="display: none;"
+    >
+        <span x-text="message"></span>
+</div>
 </div>

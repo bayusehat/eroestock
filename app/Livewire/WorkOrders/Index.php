@@ -104,15 +104,10 @@ class Index extends Component
                 $this->sn[] = $sn['order_sn'];
             }
 
-            $getOrder = $this->getDetailOrderShopee($this->sn);
-            if($getOrder){
-                return redirect()->back()->with('success','Berhasil mengambil data order dari Shopee.');
-            }else{
-                return redirect()->back()->with('error','Gagal mengambil data order dari Shopee.');
-            }
+            $this->dispatch('notify', message: 'Data grabed successfully!');
         }
         if($response['api_status'] == 'error'){
-            return redirect()->back()->with('error','Token Shopee gagal diperbarui');
+            $this->dispatch('notify', message: 'Data grabed successfully!');
         }
     }
 

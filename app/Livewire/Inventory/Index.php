@@ -88,7 +88,10 @@ class Index extends Component
         $items = Item::with(['inventory' => function($query){
             if ($this->search) {
                 $s = $this->search;
-                $query->where(fn ($q) => $q->where('size', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))->orderBy('sku');
+                $query->whereHas('item', function ($query) use ($s) {
+                    $query->where('name', 'like', "%{$s}%");
+                });
+                $query->orWhere(fn ($q) => $q->where('size', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))->orderBy('sku');
             }
         }]);
 

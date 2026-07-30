@@ -26,6 +26,7 @@ use App\Livewire\WorkOrders\Show;
 use App\Livewire\WorkOrders\OfflineShow;
 use App\Livewire\WorkOrders\ExchangeSize;
 use App\Livewire\Reports\ItemAsset;
+use App\Livewire\Reports\Omzet;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', [LoginController::class, 'show'])->name('login');
@@ -127,6 +128,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/payroll-summary', PayrollSummary::class)->name('reports.payroll-summary');
     Route::get('/reports/tax-summary', TaxSummary::class)->name('reports.tax-summary');
     Route::get('/worth', ItemAsset::class)->name('reports.worth');
+    Route::get('/omzet', Omzet::class)->name('omzet');
 
     // Settings
     Route::get('/settings/company', Company::class)->name('settings.company');

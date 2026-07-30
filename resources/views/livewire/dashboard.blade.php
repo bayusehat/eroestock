@@ -21,12 +21,14 @@
             </h3>
             <p class="mt-2 text-2xl font-bold">{{ App\Helpers\Format::currency($outstandingPayables) }}</p>
         </div> --}}
-        <div class="rounded-lg border bg-card p-4 shadow-sm">
-            <h3 class="flex items-center gap-2 text-base font-semibold">
-                <x-icon name="receipt" class="size-4" /> Potential Profit & Loss
-            </h3>
-            <p class="mt-2 text-2xl font-bold">{{ App\Helpers\Format::currency($potentialPl) }}</p>
-        </div>
+        <a href="{{route('omzet')}}">
+            <div class="rounded-lg border bg-card p-4 shadow-sm">
+                <h3 class="flex items-center gap-2 text-base font-semibold">
+                    <x-icon name="receipt" class="size-4" /> Potential Profit & Loss
+                </h3>
+                <p class="mt-2 text-2xl font-bold">{{ App\Helpers\Format::currency($potentialPl) }}</p>
+            </div>
+        </a>
         <a href="{{route('reports.worth')}}">
             <div class="rounded-lg border bg-card p-4 shadow-sm">
                 <h3 class="flex items-center gap-2 text-base font-semibold">
