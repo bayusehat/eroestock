@@ -89,7 +89,7 @@ class Index extends Component
             'time_range_field' => 'create_time',
             'time_from' => Carbon::now()->subDays(15)->timestamp,
             'time_to' => Carbon::now()->timestamp,
-            'page_size' => 20
+            'page_size' => 50
         ];
         $response = Shoapi::call('order')
                 ->access('get_order_list',  $token->access_token)
@@ -104,10 +104,11 @@ class Index extends Component
                 $this->sn[] = $sn['order_sn'];
             }
 
-            $this->dispatch('notify', message: 'Data grabed successfully!');
+            $this->getDetailOrderShopee($this->sn);
         }
+
         if($response['api_status'] == 'error'){
-            $this->dispatch('notify', message: 'Data grabed successfully!');
+            $this->dispatch('notify', message: 'Error! connect to shopee first', color: 'bg-red-500');
         }
     }
 
@@ -167,7 +168,7 @@ class Index extends Component
                 'shopee_voucher' => $response['buyer_payment_info']['shopee_voucher'],
                 'buyer_service_fee' => $response['buyer_payment_info']['buyer_service_fee']
             ]);
-            return true;
+            $this->dispatch('notify', message: 'Data Shopee grabbed successfully!', color: 'bg-green-500');
         }else{
             return false;
         }
@@ -255,11 +256,10 @@ class Index extends Component
 
                             if($child->wasRecentlyCreated) {
                                 $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
-                                if($parent->order_status == 'READY_TO_SHIP'){
-                                    Inventory::where([
+                                if($parent->order_status <> 'CANCELLED' && $parent->order_status == 'UNPAID'){
+                                    $inv = Inventory::where([
                                         'sku' => $child->model_sku
                                     ])->decrement('store_stock', (int) $child->model_quantity_purchased);
-
                                 }
                             }
                             if (!$child->wasRecentlyCreated && $order->wasChanged('order_status')) {
@@ -279,7 +279,6 @@ class Index extends Component
                 }
             }
         });
-
         return true;
     }
 
@@ -291,6 +290,37 @@ class Index extends Component
             'description' => 'Shopee Order '.$order_id->order_sn ?: null, 'reference_no' => $order_id->order_sn ?: null,
             'payment_method' => 'bank_transfer' ?: null, 'category' => '-' ?: null, 'created_by' => auth()->id()
         ]);
+    }
+
+    public function getGeneralSku($sku){
+        return substr($sku, 0, strrpos($sku, '-'));
+    }
+
+    public function shopeeItemIdtoInventory(){
+        $shopeeDetail = ShopeeOrderDetail::select('item_id','model_sku')->distinct()->get();
+            DB::transaction(function () use ($shopeeDetail) {
+                 foreach ($shopeeDetail as $i => $item) {
+                    Inventory::whereRaw("LEFT(sku, LENGTH(sku) - LOCATE('-', REVERSE(sku))) = ?",[ $this->getGeneralSku($item->model_sku)])->update([
+                        'shopee_item_id' => $item->item_id
+                    ]);
+                 }
+            });
+
+        $this->shoppeModelIdtoInventory();
+        return true;
+    }
+
+    public function shoppeModelIdtoInventory(){
+        $shopeeDetail = ShopeeOrderDetail::select('item_id','model_id','model_sku')->where('model_sku','<>','')->distinct()->get();
+            DB::transaction(function () use ($shopeeDetail) {
+                 foreach ($shopeeDetail as $i => $item) {
+                    Inventory::where(['shopee_item_id' => $item->item_id, 'sku' => $item->model_sku])
+                    ->update([
+                        'model_id' => $item->model_id
+                    ]);
+                 }
+            });
+        return true;
     }
 
     public function destroy($id){

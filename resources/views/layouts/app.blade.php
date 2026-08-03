@@ -224,6 +224,16 @@
                 </div>
             </header>
             <main class="flex-1 overflow-auto p-4">
+                <div
+                    x-data="{ open: false, message: '', color: 'bg-blue-500' }"
+                    @notify.window="open = true; message = $event.detail.message; color = $event.detail.color; setTimeout(() => open = false, 3000)"
+                    x-show="open"
+                    :class="color"
+                    class="fixed inset-x-0 top-5 z-50 text-white px-4 py-2 rounded shadow-lg"
+                    style="display: none;"
+                    >
+                        <span x-text="message"></span>
+                </div>
                 @if (session('success'))
                     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
                          class="mb-4 rounded-md bg-green-500/15 p-3 text-sm text-green-400">

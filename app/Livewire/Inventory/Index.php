@@ -7,6 +7,13 @@ use App\Models\Inventory;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Helpers\StockMovement;
+use Muhanz\Shoapi\Facades\Shoapi;
+use App\Models\ShopeeToken;
+use App\Models\ShopeeOrder;
+use App\Models\ShopeeOrderDetail;
+use App\Models\ShopeeItem;
+use Carbon\Carbon;
+use App\Helpers\Format;
 use DB;
 
 class Index extends Component
@@ -17,14 +24,20 @@ class Index extends Component
 
     protected $queryString = ['search'];
 
-    public function updatingSearch(): void { $this->resetPage(); }
-
     public bool $showModal = false;
     public ?Inventory $stockStatus = null;
     public int $stockNow = 0;
     public string $stockSide = '';
     public int $update_stock = 0;
     public bool $isSuccess = false;
+    public $token = null;
+    public array $models = [];
+
+    public function updatingSearch(): void { $this->resetPage(); }
+
+    public function mount(){
+        $this->token = ShopeeToken::where(['user_id' => auth()->id()])->first();
+    }
 
     public function changeStock(int $id, $side){
         $this->showModal = true;
@@ -83,17 +96,77 @@ class Index extends Component
         session()->flash('success', 'Item berhasil dihapus.');
     }
 
+    public function getItemFromShopee(){
+        $params =  [
+            'offset' => 0,
+            'page_size' => 91,
+            'item_status' => ['NORMAL']
+        ];
+        $response = Shoapi::call('product')
+                ->access('get_item_list',  $this->token->access_token)
+                ->shop($this->token->shop_id)
+                ->request($params)
+                ->response();
+
+        $response = Format::parseData($response);
+        if($response['api_status'] == 'success'){
+            $items = collect($response['item'])->pluck('item_id')->toArray();
+            $this->getModelList($items);
+        }
+
+        if($response['api_status'] == 'error'){
+            $this->dispatch('notify', message: 'Error! connect to shopee first', color: 'bg-red-500');
+        }
+    }
+
+    public function getModelList(array $items){
+        foreach ($items as $i => $item) {
+            $params =  [
+                'item_id' => $item,
+            ];
+            $response = Shoapi::call('product')
+                    ->access('get_model_list',  $this->token->access_token)
+                    ->shop($this->token->shop_id)
+                    ->request($params)
+                    ->response();
+
+            $response = Format::parseData($response);
+
+            if($response['api_status'] == 'success'){
+                DB::transaction(function () use ($response, $item) {
+                    foreach($response['model'] as $mod){
+                        ShopeeItem::updateOrCreate(
+                        ['item_id' => $item, 'model_id' => $mod['model_id']],
+                        [
+                            'item_id' => $item,
+                            'model_id' => $mod['model_id'],
+                            'model_sku' => $mod['model_sku'],
+                            'model_status' => $mod['model_status']
+                        ]);
+                    }
+                });
+            }
+
+            if($response['api_status'] == 'error'){
+                $this->dispatch('notify', message: 'Error! connect to shopee first', color: 'bg-red-500');
+            }
+        }
+
+       $this->dispatch('notify', message: 'Get item shopee success', color: 'bg-green-500');
+    }
+
     public function render()
     {
-        $items = Item::with(['inventory' => function($query){
-            if ($this->search) {
-                $s = $this->search;
-                $query->whereHas('item', function ($query) use ($s) {
-                    $query->where('name', 'like', "%{$s}%");
-                });
-                $query->orWhere(fn ($q) => $q->where('size', 'like', "%{$s}%")->orWhere('sku', 'like', "%{$s}%"))->orderBy('sku');
-            }
-        }]);
+        $items = Item::query()->with('inventory');
+        if ($this->search) {
+            $s = $this->search;
+            $items->where(function($query) use ($s){
+                $query->where('name','like',"%{$s}%")
+                    ->orWhereHas('inventory', function($query) use ($s){
+                        $query->where('sku','like', "%{$s}%");
+                    });
+            });
+        }
 
         return view('livewire.inventory.index', ['items' => $items->paginate(25)]);
     }

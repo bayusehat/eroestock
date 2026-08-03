@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'shopee/webhook', // Replace with your exact route URI
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

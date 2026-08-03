@@ -31,6 +31,10 @@
                     <h3> TOTAL OMZET</h3>
                     <h3>{{ App\Helpers\Format::currency($total_omzet) }}</h3>
                 </div>
+                 <div class="flex justify-between text-sm">
+                    <h3> TOTAL GROSS PROFIT</h3>
+                    <h3>{{ App\Helpers\Format::currency($gross_profit) }}</h3>
+                </div>
             </div>
         </div>
 
@@ -46,6 +50,7 @@
                         <th class="px-4 py-3 font-medium">Buyer Username</th>
                         <th class="px-4 py-3 font-medium">Order Date</th>
                         <th class="px-4 py-3 font-medium">Potential Income</th>
+                        <th class="px-4 py-3 font-medium">Gross Profit</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,6 +61,7 @@
                             <td class="px-4 py-3">{{ $item->buyer_username }}</td>
                             <td class="px-4 py-3">{{ \Carbon\Carbon::createFromTimestamp($item->create_time)->toDateTimeString() }}</td>
                             <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency($item->escrow_amount) }}</td>
+                            <td class="px-4 py-3 text-right">{{ App\Helpers\Format::currency($item->gross_profit) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

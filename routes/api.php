@@ -19,8 +19,10 @@ use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VendorController;
 use App\Http\Controllers\Api\V1\WorkOrderController;
+use App\Http\Controllers\Api\V1\ShopeeWebhookController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/shopee/webhook', [ShopeeWebhookController::class, 'handle']);
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
 

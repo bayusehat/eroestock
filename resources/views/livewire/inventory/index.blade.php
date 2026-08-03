@@ -1,5 +1,8 @@
 <div class="space-y-6">
     <x-page-header title="Items" description="Kelola daftar Item">
+        <a wire:click="getItemFromShopee()" href="#" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <x-icon name="refresh-cw" class="size-4" /> Sync Stock Shopee
+        </a>
         <a wire:navigate href="{{ route('stock-opname.index') }}" class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <x-icon name="storage" class="size-4" /> Stock Opname
         </a>
@@ -10,6 +13,15 @@
             <x-icon name="plus" class="size-4" /> Tambah Item
         </a>
     </x-page-header>
+    <div wire:loading wire:target="getItemFromShopee()" class="fixed inset-0 z-50 h-screen w-full flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="px-6 py-4 bg-transparent rounded-lg shadow-xl flex items-center justify-center space-x-3">
+            <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://w3.org" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-white-700 font-medium">Getting data from shopee, please wait ...</span>
+        </div>
+    </div>
     <input wire:model.live.debounce.300ms="search" type="search" placeholder="Cari item..."
            class="h-9 max-w-xs rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
     <div class="rounded-md border overflow-x-auto">
@@ -41,12 +53,12 @@
                                 <div class="flex items-center gap-2 ">
                                     <div class="group relative flex justify-center">
                                         <span class="m-1">{{ $iv->store_stock ?? 0 }}</span>
-                                            @if ($iv->store_stock < 5)
+                                            {{-- @if ($iv->store_stock < 5)
                                             <span><x-icon name="alert-circle" class="size-4 text-red-700" data-tooltip-target="tooltip-light" x-on:click="$wire.changeStock({{$iv->id}},'store_stock')"/></span>
                                             <span class="absolute bottom-full mb-2 hidden group-hover:block w-auto p-2 bg-white text-black text-xs rounded shadow-lg">
                                                 Segera lakukan penambahan stok
                                             </span>
-                                            @endif
+                                            @endif --}}
                                     </div>
                                 </div>
                             </td>
