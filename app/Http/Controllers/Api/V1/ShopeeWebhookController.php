@@ -26,7 +26,6 @@ class ShopeeWebhookController extends Controller
         $this->token = ShopeeToken::where(['user_id' => 1])->first();   // 3. Assign initial values
         if($this->token?->isExpired()){
             $this->refreshToken(1, $this->token->shop_id);
-            Log::info('is Token Expired : '.$this->token?->isExpired());
         }
     }
 
@@ -59,12 +58,12 @@ class ShopeeWebhookController extends Controller
 
         if($response['api_status'] == 'success'){
             //updateOrCreate Order from Shopee
-            Log::info('Order Detail : '. json_encode($response));
-            // if($this->dumpOrder($response, $status)){
-            //     return true;
-            // }else{
-            //    return false;
-            // }
+            // Log::info('Order Detail : '. json_encode($response));
+            if($this->dumpOrder($response, $status)){
+                return true;
+            }else{
+               return false;
+            }
         }else{
             return false;
         }
@@ -132,7 +131,7 @@ class ShopeeWebhookController extends Controller
 
     public function dumpOrder($response, $status){
         DB::transaction(function () use ($response, $status){
-                $order_list = $response['order_list'];
+                $order_list = $response['order_list'][0];
                 $data = [
                     'order_sn' => $order_list['order_sn'],
                     'booking_sn' => $order_list['booking_sn'],
@@ -180,19 +179,22 @@ class ShopeeWebhookController extends Controller
                                 'model_quantity_purchased' => $detail['model_quantity_purchased'],
                                 'model_sku' => $detail['model_sku']
                             ]);
-                            //get payment details
-                            $this->getEscrowDetail($order);
+
                             //logistics
                             $this->getTrackingNumber($order);
 
                             if($child->wasRecentlyCreated) {
+                                //get payment details
+                                $this->getEscrowDetail($order);
                                 $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
-                                if($parent->order_status <> 'CANCELLED' && $parent->order_status == 'UNPAID'){
-                                    $inv = Inventory::where([
+                                if($parent->order_status == 'READY_TO_SHIP'){
+                                    Inventory::where([
                                         'sku' => $child->model_sku
                                     ])->decrement('store_stock', (int) $child->model_quantity_purchased);
+                                    $this->getModelDetail($detail['item_id'],$detail['model_id']);
                                 }
                             }
+
                             if (!$child->wasRecentlyCreated) {
                                 $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
                                 if($parent->order_status == 'CANCELLED'){
@@ -215,11 +217,84 @@ class ShopeeWebhookController extends Controller
     public function addToTransactions($order_id){
         Transaction::create([
             'transaction_no' => GeneratesNumber::generateNumber('TXN', 'transactions', 'transaction_no', 'Y'),
-            'type' => 'income', 'date' => Carbon::now()->toDateString(), 'amount' => $order_id->escrow_amount,
-            'account_id' => 4, 'contra_account_id' => 22,
-            'description' => 'Shopee Order '.$order_id->order_sn ?: null, 'reference_no' => $order_id->order_sn ?: null,
-            'payment_method' => 'bank_transfer' ?: null, 'category' => '-' ?: null, 'created_by' => auth()->id()
+            'type' => 'income',
+            'date' => Carbon::now()->toDateString(),
+            'amount' => $order_id->escrow_amount,
+            'account_id' => 4,
+            'contra_account_id' => 22,
+            'description' => 'Shopee Order '.$order_id->order_sn ?: null,
+            'reference_no' => $order_id->order_sn ?: null,
+            'payment_method' => 'bank_transfer' ?: null,
+            'category' => '-' ?: null,
+            'created_by' => auth()->id()
         ]);
+    }
+
+    public function getModelDetail($item_id, $model_id){
+        $params = [
+            'item_id' =>  $item_id
+        ];
+
+        $response = Shoapi::call('product')
+                ->access('get_model_list', $this->token->access_token)
+                ->shop($this->token->shop_id)
+                ->request($params)
+                ->response();
+
+        $response = Format::parseData($response);
+
+        if($response['api_status'] == 'success'){
+            $this->compareStockShopee($response,$item_id,$model_id);
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public function compareStockShopee($response, $itemId, $modelId){
+        $models = $response['model'];
+        $checkModel = Inventory::where(['shopee_item_id' => $itemId, 'model_id' => $modelId])->first();
+        foreach ($models as $model) {
+            if($model['model_id'] == $modelId && $checkModel?->exists){
+                //check last stock in inventory
+                $lastStock = $checkModel->store_stock;
+                $lastStockShopee = $model['stock_info_v2']['seller_stock'][0]['stock'];
+                $stock_to_update = $lastStock < 5 ? ($lastStockShopee + ($lastStock - $lastStockShopee)) : $lastStock;
+                $this->updateStockShopee($itemId, $modelId, $stock_to_update);
+            }
+        }
+    }
+
+    public function updateStockShopee($itemId, $modelId, $stock){
+        $params = [
+            "item_id" => $itemId,
+            "stock_list" => [
+                [
+                    "model_id" => $modelId,
+                    "seller_stock" => [
+                        [
+                            "location_id" => "IDZ",
+                            "stock" => $stock
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $response = Shoapi::call('product')
+                ->access('update_stock', $this->token->access_token)
+                ->shop($this->token->shop_id)
+                ->request($params)
+                ->response();
+
+        $response = Format::parseData($response);
+
+        if($response['api_status'] == 'success'){
+            PushDataShopee::create(['push_data' =>  json_encode($response)]);
+            return true;
+        }else{
+            return false;
+        }
     }
 
     public function refreshToken($userId, $shopId)
@@ -228,9 +303,7 @@ class ShopeeWebhookController extends Controller
             ->where('shop_id', $shopId)
             ->first();
 
-        if (!$token || !$token->isExpired()) {
-            return $token;
-        }
+        if (!$token || !$token->isExpired()) { return $token;}
 
         try {
             $params = [

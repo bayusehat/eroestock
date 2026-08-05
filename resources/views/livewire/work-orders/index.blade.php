@@ -1,6 +1,6 @@
 <div class="space-y-6">
     <x-page-header title="Orders" description="Kelola order">
-        <button wire:click="getOrderShopee()"
+        {{-- <button wire:click="getOrderShopee()"
            class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <span wire:loading.remove class="flex items-center gap-2">
                 <x-icon name="arrow-down" class="size-4" /> Get Order From Shopee
@@ -8,7 +8,7 @@
             <span wire:loading class="flex items-center gap-2">
                 <x-icon name="loader-2" class="size-4 animate-spin" /> Processing...
             </span>
-        </button>
+        </button> --}}
         <a wire:navigate href="{{ route('work-orders.create') }}"
            class="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <x-icon name="plus" class="size-4" /> Create Order
@@ -83,7 +83,6 @@
                 <tr class="border-b bg-muted/50 text-left text-muted-foreground">
                     <th class="px-4 py-3 font-medium">#</th>
                     <th class="px-4 py-3 font-medium">Order</th>
-                    {{-- <th class="px-4 py-3 font-medium">Source</th> --}}
                     <th class="px-4 py-3 font-medium">Items</th>
                     <th class="px-4 py-3 font-medium">Status</th>
                     <th class="px-4 py-3 font-medium">Order Date</th>
@@ -118,7 +117,6 @@
                                 {!! $wo->order_sn .'<br><span class="text-xs text-gray-50">'. $wo->buyer_username.'<br>'.$wo->tracking_number.' - '.$wo->shipping_carrier.'</span>' !!}
                             </a>
                         </td>
-                        {{-- <td class="px-4 py-3">{{ $wo->flag }}</td> --}}
                         <td class="px-4 py-3 text-nowrap">
                             @foreach ($wo->details as $detail)
                                 {!! '<span class="text-xs">'.$detail->item_name.' x'.$detail->model_quantity_purchased.'</span><br>' !!}

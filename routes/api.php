@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\ShopeeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/shopee/webhook', [ShopeeWebhookController::class, 'handle']);
+Route::get('/shopee/{item_id}/{model_id}/list', [ShopeeWebhookController::class, 'getModelDetail']);
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
 
