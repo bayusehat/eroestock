@@ -47,7 +47,7 @@
             <a href="#" wire:click="setTab('shopee')" class="inline-flex items-center justify-center  w-full text-body bg-neutral-primary-soft border border-default hover:bg-neutral-secondary-medium hover:text-heading focus:ring-1 focus:ring-neutral-secondary-strong font-medium leading-5 text-sm px-4 py-2.5 focus:outline-none
             {{ $activeTab === 'shopee'
                         ? 'border-orange-600 text-orange-600 dark:text-orange-400 dark:border-orange-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200' }}
+                        : 'border-transparent text-gray-4000 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200' }}
             ">
             <?xml version="1.0" encoding="utf-8"?><svg class="w-4 h-4 me-1.5" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 109.59 122.88" style="enable-background:new 0 0 109.59 122.88" xml:space="preserve"><style type="text/css"><![CDATA[
         .st0{fill:#EE4D2D;}
@@ -59,7 +59,7 @@
             <a href="#" wire:click="setTab('tiktok')" class="inline-flex items-center justify-center  w-full text-body bg-neutral-primary-soft border border-default hover:bg-neutral-secondary-medium hover:text-heading focus:ring-1 focus:ring-neutral-secondary-strong font-medium leading-5 text-sm px-4 py-2.5 focus:outline-none
             {{ $activeTab === 'tiktok'
                         ? 'border-pink-600 text-pink-600 dark:text-pink-400 dark:border-pink-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                        : 'border-transparent text-gray-4000 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200' }}">
                 <svg class="w-4 h-4 me-1.5" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 461 512.235"><g fill-rule="nonzero"><path fill="#2DCCD3" d="M370.934 98.964c19.378 19.981 43.543 32.158 67.898 37.7v-15.005c-22.884-1.621-46.823-8.822-67.898-22.695zM230.952 0v335.533c0 43.959-31.593 72.234-70.009 72.234-12.743 0-24.844-2.978-35.363-8.483 13.346 17.041 34.421 26.843 57.531 26.843 38.417 0 70.01-28.275 70.01-72.272V18.322h60.886C312.348 12.479 310.99 6.371 309.934 0h-78.982zM181 195.062v-16.627c-7.691-1.281-15.382-1.696-21.753-1.696C72.573 176.739 0 246.296 0 332.555c0 56.626 27.559 105.033 69.444 133.685-29.18-28.953-47.276-69.481-47.276-115.362 0-86.109 72.347-155.628 158.832-155.816z"/><path fill="#F1204A" d="M318.87 329.991c0 107.144-81.96 163.921-159.209 163.921-33.44 0-64.505-10.103-90.217-27.672 28.879 28.652 68.616 45.995 112.385 45.995 77.248 0 159.208-56.777 159.208-163.921V173.723c-7.69-5.203-15.08-11.272-22.167-18.36v174.628zm-193.289 69.294c-9.426-11.914-15.043-27.334-15.043-45.43 0-50.782 39.698-77.624 92.629-72.045v-85.052c-7.69-1.282-15.381-1.697-21.79-1.697H181v68.389c-52.931-5.542-92.63 21.263-92.63 72.083 0 29.707 15.193 52.252 37.211 63.752zm313.251-262.621v63.525c-35.174 0-68.464-6.711-97.795-26.466 34.157 34.157 75.59 44.826 119.963 44.826v-78.567a137.713 137.713 0 01-22.168-3.318zm-67.898-37.701c-18.737-19.265-33.026-45.806-38.832-80.641h-18.095c10.329 37.663 31.592 63.94 56.927 80.641z"/><path fill="#fff" d="M159.661 493.912c77.248 0 159.209-56.777 159.209-163.921V155.364c7.088 7.087 14.477 13.157 22.168 18.359 29.33 19.755 62.62 26.466 97.794 26.466v-63.525c-24.354-5.542-48.52-17.72-67.898-37.7-25.335-16.702-46.597-42.979-56.928-80.641H253.12v335.533c0 43.996-31.593 72.271-70.009 72.271-23.111 0-44.185-9.801-57.531-26.842-22.017-11.499-37.21-34.044-37.21-63.751 0-50.821 39.698-77.626 92.63-72.084v-68.388c-86.485.189-158.832 69.708-158.832 155.815 0 45.882 18.096 86.409 47.277 115.363 25.711 17.569 56.776 27.672 90.216 27.672z"/></g></svg>
                 TikTok
             </a>
@@ -68,7 +68,7 @@
             <a href="#" wire:click="setTab('offline')" class="inline-flex items-center justify-center  w-full text-body bg-neutral-primary-soft border border-default rounded-e-base hover:bg-neutral-secondary-medium hover:text-heading focus:ring-1 focus:ring-neutral-secondary-strong font-medium leading-5 text-sm px-4 py-2.5 focus:outline-none
             {{ $activeTab === 'offline'
                         ? 'border-white-600 text-white-600 dark:text-white-400 dark:border-white-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                        : 'border-transparent text-gray-4000 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200' }}">
                 <svg class="w-4 h-4 me-1.5" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110.95 122.88"><defs><style>.cls-1{fill:#ffe256;}</style></defs><title>shopping-bag</title><path d="M16.78,28.81h6.68a11.63,11.63,0,1,0,22.36,0H63.6a11.64,11.64,0,1,0,22.37,0h8.2a10.46,10.46,0,0,1,7.31,3,10.78,10.78,0,0,1,3.07,6.69h0l6.34,73.21a2.23,2.23,0,0,1,0,.37c0,.2,0,.35,0,.43a10.23,10.23,0,0,1-2.85,7,10.52,10.52,0,0,1-6.85,3.25h-.18l-.55,0H10.43l-.57,0H9.69a10.56,10.56,0,0,1-6.85-3.25,10.25,10.25,0,0,1-2.84-7c0-.09,0-.28,0-.54l0-.26H0L6.39,38.53l0-.31A10.82,10.82,0,0,1,7.33,35a10.67,10.67,0,0,1,2.13-3.11c.13-.13.27-.25.4-.36a10.37,10.37,0,0,1,3-1.87h0a10.38,10.38,0,0,1,3.94-.79Z"/><path class="cls-1" d="M16.78,33.74h6.36a11.63,11.63,0,0,0,23,0H63.28a11.63,11.63,0,0,0,23,0h7.88A5.35,5.35,0,0,1,98,35.34,5.65,5.65,0,0,1,99.64,39L106,112.17c0,.17,0,.3,0,.38a5.5,5.5,0,0,1-5.11,5.38l-.38,0H10.43l-.39,0a5.49,5.49,0,0,1-5.11-5.39c0-.08,0-.2,0-.38L11.3,39A5.7,5.7,0,0,1,13,35.33a5.44,5.44,0,0,1,3.83-1.59Z"/><path d="M36.16,26.48V23.26h0A18.59,18.59,0,0,1,54.67,4.73h0A18.59,18.59,0,0,1,73.22,23.24h0v3.35A5.65,5.65,0,1,0,80.62,32,5.59,5.59,0,0,0,78,27.17V23.24h0A23.3,23.3,0,0,0,54.71,0h0A23.3,23.3,0,0,0,31.44,23.26h0v4.2a5.65,5.65,0,1,0,4.73-1Z"/></svg>
                 Offline
             </a>
@@ -87,7 +87,7 @@
                     <th class="px-4 py-3 font-medium">Status</th>
                     <th class="px-4 py-3 font-medium">Order Date</th>
                     <th class="px-4 py-3 text-right font-medium">Buyer Total Paid</th>
-                    <th class="px-4 py-3 font-medium"></th>
+                    <th class="px-4 py-3 font-medium">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -114,7 +114,7 @@
                         <td class="px-4 py-3">{{ ++$sp }}</td>
                         <td class="px-4 py-3">
                             <a wire:navigate href="{{ route('work-orders.show', $wo) }}" class="font-medium text-primary hover:underline">
-                                {!! $wo->order_sn .'<br><span class="text-xs text-gray-50">'. $wo->buyer_username.'<br>'.$wo->tracking_number.' - '.$wo->shipping_carrier.'</span>' !!}
+                                {!! $wo->order_sn .'<br><span class="text-xs text-gray-400">'. $wo->buyer_username.'<br>'.$wo->tracking_number.' - '.$wo->shipping_carrier.'</span>' !!}
                             </a>
                         </td>
                         <td class="px-4 py-3 text-nowrap">

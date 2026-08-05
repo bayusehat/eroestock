@@ -226,7 +226,7 @@ class ShopeeWebhookController extends Controller
             'reference_no' => $order_id->order_sn ?: null,
             'payment_method' => 'bank_transfer' ?: null,
             'category' => '-' ?: null,
-            'created_by' => auth()->id()
+            'created_by' => $this->token->user_id
         ]);
     }
 
@@ -245,6 +245,7 @@ class ShopeeWebhookController extends Controller
 
         if($response['api_status'] == 'success'){
             $this->compareStockShopee($response,$item_id,$model_id);
+            Log::info("Data model : ". json_encode($response));
             return true;
         }else{
             return false;
@@ -259,22 +260,34 @@ class ShopeeWebhookController extends Controller
                 //check last stock in inventory
                 $lastStock = $checkModel->store_stock;
                 $lastStockShopee = $model['stock_info_v2']['seller_stock'][0]['stock'];
-                $stock_to_update = $lastStock < 5 ? ($lastStockShopee + ($lastStock - $lastStockShopee)) : $lastStock;
-                $this->updateStockShopee($itemId, $modelId, $stock_to_update);
+                if($lastStockShopee < 5){
+                    $stock_to_update = $lastStock > 5 ? ($lastStockShopee + (5 - $lastStockShopee)) : $lastStock;
+                    $this->updateStockShopee($itemId, $modelId, $stock_to_update);
+                    $ret = [
+                        'item_id' => $itemId,
+                        'model_id' => $modelId,
+                        'stock_shopee' => $lastStockShopee,
+                        'stock_store' => $lastStock,
+                        'stock_to_update' => $stock_to_update
+                    ];
+                    Log::info('Data Stock Updated : '.json_encode($ret));
+                }
+
+                Log::info('Data Stock Shopee : '.json_encode(['stock_shopee' =>  $lastStockShopee, 'stock_store' => $lastStock]));
             }
         }
     }
 
     public function updateStockShopee($itemId, $modelId, $stock){
         $params = [
-            "item_id" => $itemId,
+            "item_id" => (int) $itemId,
             "stock_list" => [
                 [
-                    "model_id" => $modelId,
+                    "model_id" => (int) $modelId,
                     "seller_stock" => [
                         [
                             "location_id" => "IDZ",
-                            "stock" => $stock
+                            "stock" => (int) $stock
                         ]
                     ]
                 ]
@@ -289,10 +302,13 @@ class ShopeeWebhookController extends Controller
 
         $response = Format::parseData($response);
 
+        Log::info("Response Update Stock : ". json_encode($response));
+
         if($response['api_status'] == 'success'){
-            PushDataShopee::create(['push_data' =>  json_encode($response)]);
+            PushDataShopee::create(['push_data' => json_encode($response)]);
             return true;
         }else{
+            Log::error("Error update stock shopee :". json_encode($response));
             return false;
         }
     }

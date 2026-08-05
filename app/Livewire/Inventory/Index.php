@@ -99,7 +99,7 @@ class Index extends Component
     public function getItemFromShopee(){
         $params =  [
             'offset' => 0,
-            'page_size' => 91,
+            'page_size' => 100,
             'item_status' => ['NORMAL']
         ];
         $response = Shoapi::call('product')

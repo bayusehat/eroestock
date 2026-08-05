@@ -187,7 +187,7 @@
                             $classTiktok = 'pointer-events-none cursor-default';
                         }
                     @endphp
-                    <a href="{{route('tiktok.connect')}}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-cyan-100 hover:bg-cyan/10 hover:text-cyan-900 text-nowrap {{$classTiktok}}" target="_blank"><x-icon name="music" class="size-4" /> {{ !$tokenTiktok?->isExpired() && $tokenTiktok != null ? 'Tiktok Connected' : 'Connect Tiktok' }}</a>
+                    <a href="{{route('tiktok.connect')}}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-cyan-400 hover:bg-cyan/10 hover:text-cyan-900 text-nowrap {{$classTiktok}}" target="_blank"><x-icon name="music" class="size-4" /> {{ !$tokenTiktok?->isExpired() && $tokenTiktok != null ? 'Tiktok Connected' : 'Connect Tiktok' }}</a>
                     @if ($tokenTiktok?->isExpired() && $tokenTiktok != null)
                         <a href="{{ route('tiktok.refresh',['userId' => auth()->id(),'openId' => $tokenTiktok->open_id])}}">
                             <x-icon name="refresh-cw" class="size-4" />
@@ -204,7 +204,7 @@
                             $classShopee = 'pointer-events-none cursor-default';
                         }
                     @endphp
-                    <a href="{{ route('shopee.connect') }}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-orange-100 hover:bg-orange/10 hover:text-orange-900 text-nowrap {{$classShopee}}" target="_blank"><x-icon name="hand-bag" class="size-4" />
+                    <a href="{{ route('shopee.connect') }}" class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none text-orange-400 hover:bg-orange/10 hover:text-orange-900 text-nowrap {{$classShopee}}" target="_blank"><x-icon name="hand-bag" class="size-4" />
 
                         {{ !$token?->isExpired() && $token != null ? 'Shopee Connected' : 'Connect / Refresh Shopee' }}
                     </a>
