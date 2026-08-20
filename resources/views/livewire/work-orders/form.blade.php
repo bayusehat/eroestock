@@ -93,7 +93,7 @@
                                 <div class="grid grid-cols-3 gap-3">
                                     <div class="space-y-1.5">
                                         <label class="text-xs font-medium">Quantity</label>
-                                        <input wire:model.lazy="items.{{ $i }}.quantity" type="number" step="0.01"
+                                        <input wire:model.lazy="items.{{ $i }}.quantity" type="number"
                                                class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
                                     </div>
                                     <div class="space-y-1.5">
@@ -103,7 +103,7 @@
                                     </div>
                                     <div class="space-y-1.5">
                                         <label class="text-xs font-medium">Unit Price</label>
-                                        <input wire:model.lazy="items.{{ $i }}.unit_price" type="number" step="100"
+                                        <input wire:model.lazy="items.{{ $i }}.unit_price" type="number"
                                                class="h-8 w-full rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
                                     </div>
                                 </div>

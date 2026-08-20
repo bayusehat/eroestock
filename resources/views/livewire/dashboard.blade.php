@@ -2,7 +2,7 @@
     <x-page-header title="Selamat datang di Eroestock, {{ auth()->user()->name }}" description="Ringkasan keuangan bisnis Anda hari ini" />
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <x-stat-card title="Pendapatan Bulan Ini" :value="App\Helpers\Format::currency($revenueMtd)" icon="trending-up" />
+        <x-stat-card title="Laba Kotor Bulan Ini" :value="App\Helpers\Format::currency($revenueMtd)" icon="trending-up" />
         <x-stat-card title="Pengeluaran Bulan Ini" :value="App\Helpers\Format::currency($expensesMtd)" icon="trending-down" />
         <x-stat-card title="Laba Bersih Bulan Ini" :value="App\Helpers\Format::currency($netProfitMtd)" icon="trending-up" />
         <x-stat-card title="Saldo Kas" :value="App\Helpers\Format::currency($cashBalance)" icon="wallet" />

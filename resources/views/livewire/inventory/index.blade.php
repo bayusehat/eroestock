@@ -112,7 +112,7 @@
                                                 class="flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                                 <x-icon name="pencil" class="size-4" /> Edit
                                             </a>
-                                            <button wire:click="delete({{ $item->id }})"
+                                            <button wire:click="confirmDelete({{ $item->id }})"
                                                 class="flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm select-none hover:bg-accent hover:text-accent-foreground">
                                                 <x-icon name="trash-2" class="size-4" /> Hapus
                                             </button>
@@ -147,7 +147,24 @@
                         </button>
                     <button wire:click="updateChangeStock({{$stockStatus->id}},'{{$stockSide}}')"
                             class="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
-                        Konfirmasi
+                        Konfirmasi Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($showModalDelete)
+        <div wire:transition class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div class="w-full max-w-sm rounded-lg border bg-background p-6 shadow-xl">
+                <h2 class="text-lg font-semibold">Apakah anda yakin untuk menghapus?</h2>
+                <div class="mt-4 flex justify-end gap-2">
+                    <button wire:click="$wire.set('showModalDelete', false)"
+                            class="rounded-md border px-4 py-2 text-sm hover:bg-accent">Batal
+                    </button>
+                    <button wire:click="deleteItem({{$toDelete->id}})"
+                            class="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                        Hapus
                     </button>
                 </div>
             </div>

@@ -43,6 +43,7 @@ class Form extends Component
             'account_id' => $this->account_id, 'contra_account_id' => $this->contra_account_id,
             'description' => $this->description ?: null, 'reference_no' => $this->reference_no ?: null,
             'payment_method' => $this->payment_method ?: null, 'category' => $this->category ?: null,
+            'created_by' => auth()->id()
         ]);
         session()->flash('success', 'Transaksi berhasil disimpan.');
         $this->redirect(route('transactions.index'), navigate: true);

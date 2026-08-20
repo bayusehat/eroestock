@@ -326,6 +326,7 @@ class Index extends Component
     public function destroy($id){
         $workOrder = WorkOrder::find($id);
         if($workOrder){
+            Transaction::where(['reference_no' => $workOrder->wo_number])->delete();
             $workOrder->delete();
             foreach($workOrder->items as $detail){
                 Inventory::where([

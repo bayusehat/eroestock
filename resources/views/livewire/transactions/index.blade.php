@@ -9,19 +9,35 @@
         <input wire:model.live="dateFrom" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
         <input wire:model.live="dateTo" type="date" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring" />
     </div>
+    <div class="rounded-lg border bg-card shadow-sm">
+            <div class="border-b p-4"><h3 class="font-semibold">Info</h3></div>
+            <div class="grid gap-4 p-4 sm:grid-cols-2">
+                <div class="flex justify-between text-sm">
+                    <h3> Total Income Transaction</h3>
+                    <h3>{{ App\Helpers\Format::currency($total_transaction) }}</h3>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <h3> Total Gross Profit Transaction</h3>
+                    <h3>{{ App\Helpers\Format::currency($total_gross_profit) }}</h3>
+                </div>
+            </div>
+        </div>
     <div class="rounded-md border overflow-x-auto">
         <table class="w-full text-sm">
-            <thead><tr class="border-b bg-muted/50 text-left text-muted-foreground"><th class="px-4 py-3 font-medium">No. Transaksi</th><th class="px-4 py-3 font-medium">Tanggal</th><th class="px-4 py-3 font-medium">Tipe</th><th class="px-4 py-3 font-medium">Akun</th><th class="px-4 py-3 font-medium">Keterangan</th><th class="px-4 py-3 text-right font-medium">Jumlah</th></tr></thead>
+            <thead><tr class="border-b bg-muted/50 text-left text-muted-foreground"><th class="px-4 py-3 font-medium">No. Transaksi</th><th class="px-4 py-3 font-medium">Tanggal</th><th class="px-4 py-3 font-medium">Tipe</th><th class="px-4 py-3 font-medium">Akun</th><th class="px-4 py-3 font-medium">Keterangan</th><th class="px-4 py-3 text-right font-medium">Jumlah</th><th class="px-4 py-3 text-right font-medium">Gross Profit</th></tr></thead>
             <tbody>
                 @forelse ($transactions as $txn)
                     <tr class="border-b hover:bg-muted/30">
-                        <td class="px-4 py-3"><a wire:navigate href="{{ route('transactions.show', $txn) }}" class="font-medium text-primary hover:underline">{{ $txn->transaction_no }}</a></td>
-                        <td class="px-4 py-3">{{ $txn->date?->format('d/m/Y') }}</td>
+                        <td class="px-4 py-3"><a wire:navigate href="#" class="font-medium text-primary hover:underline">{{ $txn->transaction_no }}</a></td>
+                        <td class="px-4 py-3">{{ $txn->date }}</td>
                         <td class="px-4 py-3 capitalize">{{ $txn->type }}</td>
-                        <td class="px-4 py-3">{{ $txn->account?->name ?? '-' }}</td>
+                        <td class="px-4 py-3">{{ $txn->name ?? '-' }}</td>
                         <td class="px-4 py-3 max-w-[200px] truncate">{{ $txn->description ?? '-' }}</td>
                         <td class="px-4 py-3 text-right font-medium {{ $txn->type === 'income' ? 'text-green-400' : ($txn->type === 'expense' ? 'text-red-400' : '') }}">
                             {{ App\Helpers\Format::currency($txn->amount) }}
+                        </td>
+                        <td class="px-4 py-3 text-right font-medium {{ $txn->type === 'income' ? 'text-green-400' : ($txn->type === 'expense' ? 'text-red-400' : '') }}">
+                            {{ App\Helpers\Format::currency($txn->gp) }}
                         </td>
                     </tr>
                 @empty
@@ -30,5 +46,5 @@
             </tbody>
         </table>
     </div>
-    <div>{{ $transactions->links() }}</div>
+    {{-- <div>{{ $transactions->links() }}</div> --}}
 </div>

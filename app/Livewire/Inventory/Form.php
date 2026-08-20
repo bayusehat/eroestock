@@ -60,7 +60,7 @@ class Form extends Component
     {
         $this->token = ShopeeToken::where(['user_id' => auth()->id()])->first();   // 3. Assign initial values
         if($this->token?->isExpired()){
-            $this->refreshToken(uth()->id(), $this->token->shop_id);
+            $this->refreshToken(auth()->id(), $this->token->shop_id);
         }
 
         $this->item = $item;
@@ -135,7 +135,7 @@ class Form extends Component
                     ]);
                     if($isUpdate){
                         $inv = ShopeeItem::where('model_sku', $item['sku'])->orderBy('model_sku')->get();
-                        $storeStock = $item['store_stock'];
+                        $storeStock = $item['store_stock'] > 3 ? 3 : $item['store_stock'];
                         foreach ($inv as $si) {
                             $this->updateStockShopee($si?->item_id, $si?->model_id, $storeStock);
                         }

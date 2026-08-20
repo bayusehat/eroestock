@@ -25,6 +25,8 @@ class Index extends Component
     protected $queryString = ['search'];
 
     public bool $showModal = false;
+    public bool $showModalDelete = false;
+    public ?Item $toDelete = null;
     public ?Inventory $stockStatus = null;
     public int $stockNow = 0;
     public string $stockSide = '';
@@ -51,6 +53,11 @@ class Index extends Component
             $this->stockSide = 'warehouse_stock';
             $this->update_stock = 0;
         }
+    }
+
+    public function confirmDelete(int $id){
+        $this->showModalDelete = true;
+        $this->toDelete = Item::findOrFail($id);
     }
 
     public function updateChangeStock(int $id, $side){
@@ -89,11 +96,14 @@ class Index extends Component
         });
     }
 
-    public function delete(int $id): void
+    public function deleteItem(int $id): void
     {
         Item::findOrFail($id)->delete();
         Inventory::findOrFail($id)->delete();
-        session()->flash('success', 'Item berhasil dihapus.');
+        $this->showModalDelete = false;
+        session()->flash('error', 'Item berhasil dihapus.');
+        $this->redirect(route('items.index'), navigate: true);
+        // $this->dispatch('notify', message: 'Item berhasil terhapus', color: 'bg-red-500');
     }
 
     public function getItemFromShopee(){

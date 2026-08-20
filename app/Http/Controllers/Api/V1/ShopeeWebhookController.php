@@ -15,6 +15,7 @@ use App\Models\Account;
 use App\Models\Transaction;
 use App\Traits\GeneratesNumber;
 use App\Models\Inventory;
+use App\Models\ShopeeItem;
 use Illuminate\Support\Facades\Log;
 use DB;
 
@@ -183,9 +184,10 @@ class ShopeeWebhookController extends Controller
                             //logistics
                             $this->getTrackingNumber($order);
 
+                            //get payment details
+                            $this->getEscrowDetail($order);
+
                             if($child->wasRecentlyCreated) {
-                                //get payment details
-                                $this->getEscrowDetail($order);
                                 $parent = ShopeeOrder::where('id',$child->shopee_order_id)->first();
                                 if($parent->order_status == 'READY_TO_SHIP'){
                                     Inventory::where([
@@ -245,7 +247,7 @@ class ShopeeWebhookController extends Controller
 
         if($response['api_status'] == 'success'){
             $this->compareStockShopee($response,$item_id,$model_id);
-            Log::info("Data model : ". json_encode($response));
+            // Log::info("Data model : ". json_encode($response));
             return true;
         }else{
             return false;
@@ -254,14 +256,15 @@ class ShopeeWebhookController extends Controller
 
     public function compareStockShopee($response, $itemId, $modelId){
         $models = $response['model'];
-        $checkModel = Inventory::where(['shopee_item_id' => $itemId, 'model_id' => $modelId])->first();
+        $shopeItem = ShopeeItem::where(['item_id' => $itemId, 'model_id' => $modelId])->first();
+        $checkModel = Inventory::where(['sku' => $shopeItem?->model_sku])->first();
         foreach ($models as $model) {
             if($model['model_id'] == $modelId && $checkModel?->exists){
                 //check last stock in inventory
                 $lastStock = $checkModel->store_stock;
                 $lastStockShopee = $model['stock_info_v2']['seller_stock'][0]['stock'];
-                if($lastStockShopee < 5){
-                    $stock_to_update = $lastStock > 5 ? ($lastStockShopee + (5 - $lastStockShopee)) : $lastStock;
+                if($lastStockShopee < 3){
+                    $stock_to_update = $lastStock > 3 ? ($lastStockShopee + (3 - $lastStockShopee)) : $lastStock;
                     $this->updateStockShopee($itemId, $modelId, $stock_to_update);
                     $ret = [
                         'item_id' => $itemId,
